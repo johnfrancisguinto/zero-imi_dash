@@ -102,7 +102,6 @@ st_autorefresh(interval=REFRESH_INTERVAL, key="refresh")
 
 # UI
 st.set_page_config(layout="wide")# UI STYLE (FACTORY LOOK)
-# st.title("🏭 IMI PRODUCTION DASHBOARD")
 # st.markdown("""
 # <h1 style='
 #     text-align: center;
