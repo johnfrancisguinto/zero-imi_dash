@@ -102,7 +102,7 @@ scope = [
 
 creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-
+client = gspread.authorize(creds)
 
 # ================= UTIL =================
 def load_sheet(sheet_name):
