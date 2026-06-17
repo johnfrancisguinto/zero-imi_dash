@@ -103,16 +103,24 @@ st_autorefresh(interval=REFRESH_INTERVAL, key="refresh")
 # UI
 st.set_page_config(layout="wide")# UI STYLE (FACTORY LOOK)
 # st.title("🏭 IMI PRODUCTION DASHBOARD")
+# st.markdown("""
+# <h1 style='
+#     text-align: center;
+#     font-size: 50px;
+#     color: #D12300;
+#     margin-bottom: 10px;
+# '>
+# 🏭  LIVE: IMI PRODUCTION DASHBOARD
+# </h1>
+# """, unsafe_allow_html=True)
+
 st.markdown("""
-<h1 style='
-    text-align: center;
-    font-size: 50px;
-    color: #D12300;
-    margin-bottom: 10px;
-'>
-🏭  LIVE: IMI PRODUCTION DASHBOARD
-</h1>
+<div style="display:flex; align-items:center; justify-content:center; gap:20px;">
+    <img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/zero.png" width="80">
+    <h1 style="color:#FF3139; font-size:48px;">LIVE: IMI PRODUCTION DASHBOARD</h1>
+</div>
 """, unsafe_allow_html=True)
+
 
 # Google Sheets
 scope = [
