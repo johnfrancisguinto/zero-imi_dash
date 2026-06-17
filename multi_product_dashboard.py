@@ -28,7 +28,10 @@ STATIONS_PER_PRODUCT = {
 
 st.markdown("""
 <style>
-
+/* ===== MAIN BACKGROUND ===== */
+[data-testid="stAppViewContainer"] {
+    background: linear-gradient(180deg, #DBDBDB 0%, #BFBFBF 100%);
+}
 /* EXISTING STYLES */
 .card {
     background-color:#111;
