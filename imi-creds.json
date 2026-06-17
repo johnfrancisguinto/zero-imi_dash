@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "imi-production-dashboard",
+  "private_key_id": "7dd080cfd5901ebafc9046e52c6efecf471ba923",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDoW43X6zU6RrwF\nxdIBJFEB82IMTZ2BxEHc2ERW0qJKK8OMlkde9XRqtXHZF2PLe0QqRdjNBS55KvIx\nxYhri+gMiDFpIrg+xXGvjieWEe7jkZ+wkhcRS7RzwF2in/EiV211g2Jh1frx9Np4\nxoGDoy7q8eWJWIQI+2/quDUv8VaC3bOmJi6hR7Se3ANYV8mFyK8NySKocBj0ybK+\nyiYuzczKi5NHkVwhDtnbFWcy4tZoT/2VvxTGCdW/EUblL53G8htxeYzDYyeGcMac\nDoi1JL9KAe3gy27+ikAvpWt1iDRlw5fscpZvk0bXwUkEQglSIoXh+0FiKkvfVtTe\nbRY5pT+FAgMBAAECggEANBCXxwMISUeiR/Tcqq7VjAdaOAGIQpSUYYUAQygtf0sx\nJSZjVa7QaDzCBvALx4OWcZZ3DvGTSUlLPcXSXK7bzzsRP0qtWDtrzveefS0Fh26R\nBsKlcpWxGKLJGHCYWqaWe1d2Sw/kjCTec2Ofj7yX/cM4OL9hzpVwrXqbSGPei7Hu\ncxC6ROGKOjDW8zN9xu2VMgcWJ1aLcyxpjgZIaORFEO+rA3DM50R7rb+5ADjzw2KQ\nXOr/wTsF0xAeaMhu6lOjkTI5i5THMtnTDlSXQxqY9sJROXeQ2lPSxfd7n2lnfpj7\nytPhECM470KyHcBMobachDRE8mYQ+mLGJPAcR/yeQQKBgQD+RghSu0gSV3iokq+3\n+raYO2nmKizyc1OHPK6+fPePWFj6aU/w53mgQHop+3KnIgLuJRLNEE+Ff0pFQwiA\nnNkFejN7xAnn7yxa3OlLvYMB+YaCqECZjwrgmPgwAfz3aWL2uO+19OtT8RTLGczT\nhJoa31buUtvANFlMpyVoMmOgNQKBgQDp722gHGRgOxjKz8twobEtpeVpvcH1wE8g\nFQh7onv03rQogx7PD6aAdsrjIAJpLisbDzM7lxFEYDz3MWIPMAP1izqnBvGUY+jz\n7btgSpjCrW28Ag0aZsCAGrU5PT2KxVEFRL2TKiESApcPeLglMHEtF6bvzbCQOjjh\nojDN4FSsEQKBgHIPTDCAXiYMIs3LbxNiXYIQNMLQbHUdknx5lhFQ0WP1x4QctYVk\n8EQYaDRo3NdoBFR7QOHHzUQfA1vqY+f9c8RnOqzsFV17BjSEIAqfqiK6ocH+Y2v+\npGx3ce1nFuiM153A+5ZtlRqEbEVm/2BqfQ5M3RvvAzBGyz/9QmRpJhN5AoGACw0c\niKvOsh0YlrwqSC/bRuTHaa9lMk7bbhCQTgbnBDJhIGjRU8bRftAd1Yz1kDJ2JtkY\n+n+weSJyvtq+XylNhpQFOU7CqtftcViRuYLMpKW8wVz3cX/ZKDQay5FxDtUzdqRA\nsGsVFNy6diilylv3fMHZSQrWhHm7pi0bUR5/4YECgYB5Gro7gy3WvndJ3o/uW0l5\n3RZmXHPjzhzPTbtQAwvZ/WgZklAXQN/UB18CslIZtFXR2CqWbucoRAyOpFX1EZ4O\nBZA7pprdVGLDnyVdDHFqjqmBQux1sLW2y8TwIZ00WFHgmVDnn4uRCpxIJbIHay8J\nGGkeYguf77lf/4TBq0GouA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "zero-station@imi-production-dashboard.iam.gserviceaccount.com",
+  "client_id": "116651655127510693429",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/zero-station%40imi-production-dashboard.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
