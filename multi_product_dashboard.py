@@ -5,6 +5,11 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
+import os
+
+st.write("ENV exists:", "GOOGLE_CREDENTIALS" in os.environ)
+st.write(os.environ.get("GOOGLE_CREDENTIALS", "NOT FOUND")[:100])
+
 # ================= CONFIG =================
 SPREADSHEET_ID = "1Zx9yhlJb4gr8yKec7owh3xhwG36azWXhx4eK5WIYPR4"
 REFRESH_INTERVAL = 300000
