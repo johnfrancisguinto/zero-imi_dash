@@ -26,12 +26,29 @@ STATIONS_PER_PRODUCT = {
     "CII Line": ["BAT0", "BAT2/3", "Post-Shower", "FQC"], # 5 stations
 }
 
+st.set_page_config(
+    page_title="Zero Dashboard",
+    page_icon="Zero_logo.ico",
+    layout="wide"
+)
+
 st.markdown("""
 <style>
 /* ===== MAIN BACKGROUND ===== */
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(180deg, #DBDBDB 0%, #BFBFBF 100%);
 }
+
+/* ===== HEADERS ===== */
+h1 {
+    color: #FF3139;
+    text-shadow: 0 0 12px rgba(212,255,0,0.5);
+}
+
+h2, h3 {
+    color: #e5e5e5;
+}
+
 /* EXISTING STYLES */
 .card {
     background-color:#111;
