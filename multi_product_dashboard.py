@@ -22,7 +22,7 @@ PRODUCT_SHEETS = {
 # station order per product (edit if needed)
 STATIONS_PER_PRODUCT = {
     "BIKE Line": ["MBB Config", "PREL", "FQC"],  # 3 stations
-    "BCB Line": ["BAT0", "BAT2/3", "FQC"], # 4 stations
+    "BCB Line": ["BAT0", "BAT3", "FQC"], # 4 stations
     "CII Line": ["BAT0", "BAT2/3", "Post-Shower", "FQC"], # 5 stations
 }
 
