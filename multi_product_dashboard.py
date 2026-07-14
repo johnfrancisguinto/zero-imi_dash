@@ -34,89 +34,109 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-/* ===== MAIN BACKGROUND ===== */
+
+/* ===== PAGE ===== */
+.block-container{
+    padding-top:0.5rem;
+    padding-bottom:0rem;
+    max-width:100%;
+}
+
+/* ===== BACKGROUND ===== */
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(180deg, #DBDBDB 0%, #BFBFBF 100%);
+    background: linear-gradient(
+        180deg,
+        #DBDBDB 0%,
+        #BFBFBF 100%
+    );
 }
 
 /* ===== HEADERS ===== */
-h1 {
-    color: #FF3139;
-    text-shadow: 0 0 12px rgba(212,255,0,0.5);
+h1{
+    color:#FF3139;
+    margin:0;
 }
 
-h2, h3 {
-    color: #e5e5e5;
+h2,h3{
+    margin-top:0rem !important;
+    margin-bottom:0.4rem !important;
 }
 
-/* EXISTING STYLES */
-.card {
-    background-color:#111;
+/* ===== SUMMARY / KPI CARDS ===== */
+.card{
+    background:#111;
     color:white;
-    padding:20px;
+    padding:10px;
     border-radius:12px;
     text-align:center;
+    box-shadow:0 2px 4px rgba(0,0,0,0.2);
 }
-.station-box {
-    display:inline-block;
-    padding:10px 20px;
-    margin:5px;
+
+/* ===== TABS ===== */
+.stTabs [role="tablist"]{
+    gap:10px;
+}
+
+.stTabs [role="tab"]{
+    font-size:18px;
+    font-weight:bold;
+    padding:8px 14px;
     border-radius:10px;
-    background:#222;
+    background-color:#222;
+    color:white;
+    margin-top:5px;
+    margin-bottom:5px;
 }
 
-/* spacing between tabs */
-.stTabs [role="tablist"] {
-    gap: 20px;
+.stTabs [role="tab"][aria-selected="true"]{
+    background-color:#969696;
+    color:black;
 }
 
-/* tab buttons */
-.stTabs [role="tab"] {
-    font-size: 26px;          /* 🔥 make bigger */
-    font-weight: bold;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background-color: #222;
-    color: white;
-    margin-top: 40px;
-    margin-bottom: 15px;
+.stTabs [role="tab"]:hover{
+    background-color:#636363;
+    color:black;
 }
 
-/* active tab */
-.stTabs [role="tab"][aria-selected="true"] {
-    background-color: #969696;
-    color: black;
+/* ===== DATAFRAMES ===== */
+[data-testid="stDataFrame"]{
+    font-size:12px;
 }
 
-/* hover effect */
-.stTabs [role="tab"]:hover {
-    background-color: #636363;
-    color: black;
+/* ===== SELECTBOX ===== */
+div[data-baseweb="select"]{
+    font-size:12px;
+}
+
+/* ===== EXPANDERS ===== */
+.streamlit-expanderHeader{
+    padding-top:0px;
+    padding-bottom:0px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# AUTO REFRESH
-st_autorefresh(interval=REFRESH_INTERVAL, key="refresh")
-
-# UI
-st.set_page_config(layout="wide")# UI STYLE (FACTORY LOOK)
-# st.markdown("""
-# <h1 style='
-#     text-align: center;
-#     font-size: 50px;
-#     color: #D12300;
-#     margin-bottom: 10px;
-# '>
-# 🏭  LIVE: IMI PRODUCTION DASHBOARD
-# </h1>
-# """, unsafe_allow_html=True)
-
 st.markdown("""
-<div style="display:flex; align-items:center; justify-content:center; gap:20px;">
-    <img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/Zero-Motorcycles-logo.png" width="180">
-    <h1 style="color:#FF3139; font-size:48px;">LIVE: IMI PRODUCTION DASHBOARD</h1>
+<div style="
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+margin-bottom:5px;
+">
+
+<img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/Zero-Motorcycles-logo.png"
+width="120">
+
+<h1 style="
+color:#FF3139;
+font-size:36px;
+margin:0;
+">
+LIVE: IMI PRODUCTION DASHBOARD
+</h1>
+
 </div>
 """, unsafe_allow_html=True)
 
@@ -188,32 +208,65 @@ def render_dashboard(df, title):
     #     with cols[i]:
     #         st.metric(pc, counts_full[pc])
 
-    # Flow grouped
-    st.subheader("🔄Unit per STATION")
-    for pc in station_order:
-        serials = latest[latest["station"] == pc]["serial_number"].tolist()
-        with st.expander(f"{pc} ({len(serials)})"):
-            st.write(", ".join(serials[:20]) if serials else "No units")
+    left,right = st.columns([1,3])
 
-    # ================= TRACE =================
-    st.subheader("🧭 SERIAL TRACE")
-    serial = st.selectbox("Select/Type VIN", df["serial_number"].unique())
-    trace = df[df["serial_number"]==serial].sort_values("datetime")
-    
-    def color_result(val):
-        color = "#00ff00" if val=="PASS" else "#ff3333"
-        return f"color:{color}; font-weight:bold"
-    
-    st.dataframe(
-        trace[["datetime", "station", "serial_number", "results"]]
-        .style.map(color_result, subset=["results"]),hide_index=True)
+    with left:
 
-    # ================= PASS FAIL PER PC =================
-    st.subheader("📊 PASS / FAIL PER STATION")
+        st.markdown("### 🛵 Units")
 
-    pf_station = df.groupby(["station", "results"]).size().unstack(fill_value=0)
+        for pc in station_order:
+            serials = latest[latest["station"] == pc]["serial_number"].tolist()
 
-    cols = st.columns(len(station_order))
+            with st.expander(
+                f"{pc} ({len(serials)})",
+                expanded=False
+            ):
+                st.write(
+                    ", ".join(serials[:20])
+                    if serials else "No units"
+                )
+
+    with right:
+
+        st.markdown("### 🧭 Serial Trace")
+
+        serial = st.selectbox(
+            "VIN",
+            df["serial_number"].unique()
+        )
+
+        trace = (
+            df[df["serial_number"] == serial]
+            .sort_values("datetime")
+        )
+        
+        def color_result(val):
+            color = "#00ff00" if val=="PASS" else "#ff3333"
+            return f"color:{color}; font-weight:bold"
+        
+        st.dataframe(
+            trace[
+                [
+                    "datetime",
+                    "station",
+                    "serial_number",
+                    "results"
+                ]
+            ].style.map(
+                color_result,
+                subset=["results"]
+            ),
+            use_container_width=True,
+            hide_index=True,
+            height=280
+        )
+
+        # ================= PASS FAIL PER PC =================
+        st.subheader("📊 PASS / FAIL PER STATION")
+
+        pf_station = df.groupby(["station", "results"]).size().unstack(fill_value=0)
+
+        cols = st.columns(len(station_order))
 
     for i, station in enumerate(station_order):
         with cols[i]:
@@ -239,9 +292,9 @@ def render_dashboard(df, title):
 
             st.markdown(f"""
             <div class='card'>
-                <div style='font-size:18px;'>{station}</div>
+                <div style='font-size:15px;'>{station}</div>
                 <div style='color:#00ff00;'>PASS: {pass_count}  <span style='color:#ff3333;'>FAIL: {fail_count}</span></div>
-                <div style='margin-top:10px;font-size:20px;'>
+                <div style='margin-top:10px;font-size:16px;'>
                     PASS RATE: <span style='color:{rate_color};'>{pass_rate:.1f}%</span>
                 </div>
             </div>
@@ -257,7 +310,14 @@ def render_dashboard(df, title):
         if stalled.empty:
             st.success("OK")
         else:
-            st.dataframe(stalled[["serial_number","station","hours"]],hide_index=True)
+            st.dataframe(
+                stalled[
+                    ["serial_number","station","hours"]
+                ],
+                hide_index=True,
+                use_container_width=True,
+                height=200
+            )
 
     with col2:
         stuck = latest[latest["steps"] <= 1]
@@ -265,12 +325,19 @@ def render_dashboard(df, title):
         if stuck.empty:
             st.success("OK")
         else:
-            st.dataframe(stuck[["serial_number","station","steps"]],hide_index=True)
+            st.dataframe(
+                stuck[
+                    ["serial_number","station","steps"]
+                ],
+                hide_index=True,
+                use_container_width=True,
+                height=200
+            )
 
     return total
 
 # ================= GLOBAL SUMMARY =================
-st.subheader("📊 SUMMARY")
+st.subheader("📈 SUMMARY")
 
 product_totals = {}
 
@@ -289,13 +356,13 @@ cols = st.columns(len(PRODUCT_SHEETS) + 1)
 cols[0].markdown(f"""
 <div style="
     background:#111;
-    padding:15px;
+    padding:8px;
     border-radius:12px;
     text-align:center;
     border:3px solid #949494;
 ">
     <div style="font-size:20px;color:#C1E9E2;">ALL PRODUCTS</div>
-    <div style="font-size:50px;color:#949494;font-weight:bold;">
+    <div style="font-size:36px;color:#949494;font-weight:bold;">
         {total_all}
     </div>
 </div>
@@ -312,7 +379,7 @@ for i, (name, val) in enumerate(product_totals.items()):
         border:3px solid #949494;
     ">
         <div style="font-size:20px;color:#C1E9E2;">{name}</div>
-        <div style="font-size:50px;color:#949494;font-weight:bold;">
+        <div style="font-size:36px;color:#949494;font-weight:bold;">
             {val}
         </div>
     </div>
