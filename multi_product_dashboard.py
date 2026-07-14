@@ -244,7 +244,7 @@ def render_dashboard(df, title):
 
     with left:
 
-        st.markdown("# 🛵 Units")
+        st.markdown("### 🛵 Units")
 
         for pc in station_order:
             serials = latest[latest["station"] == pc]["serial_number"].tolist()
@@ -260,7 +260,7 @@ def render_dashboard(df, title):
 
     with right:
 
-        st.markdown("# 🧭 WIP Trace")
+        st.markdown("### 🧭 WIP Trace")
 
         serial = st.selectbox(
             "VIN",
