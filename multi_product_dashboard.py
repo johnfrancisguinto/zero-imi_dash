@@ -37,7 +37,7 @@ st.markdown("""
 
 /* ===== PAGE ===== */
 .block-container{
-    padding-top:0.5rem;
+    padding-top:1.5rem;
     padding-bottom:0rem;
     max-width:100%;
 }
@@ -124,6 +124,9 @@ display:flex;
 align-items:center;
 justify-content:center;
 gap:15px;
+padding-top:10px;
+padding-bottom:10px;
+overflow:visible;
 ">
 
 <img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/Zero-Motorcycles-logo.png"
