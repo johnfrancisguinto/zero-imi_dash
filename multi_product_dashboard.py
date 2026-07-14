@@ -186,7 +186,7 @@ def process_df(df):
 
 
 def render_dashboard(df, title):
-    st.subheader(title)
+    # st.subheader(title)
 
     if df.empty:
         st.warning("No data")
@@ -261,12 +261,12 @@ def render_dashboard(df, title):
             height=280
         )
 
-        # ================= PASS FAIL PER PC =================
-        st.subheader("📊 PASS / FAIL PER STATION")
+    # ================= PASS FAIL PER PC =================
+    st.subheader("📊 PASS / FAIL PER STATION")
 
-        pf_station = df.groupby(["station", "results"]).size().unstack(fill_value=0)
+    pf_station = df.groupby(["station", "results"]).size().unstack(fill_value=0)
 
-        cols = st.columns(len(station_order))
+    cols = st.columns(len(station_order))
 
     for i, station in enumerate(station_order):
         with cols[i]:
@@ -337,7 +337,7 @@ def render_dashboard(df, title):
     return total
 
 # ================= GLOBAL SUMMARY =================
-st.subheader("📈 SUMMARY")
+# st.subheader("📈 SUMMARY")
 
 product_totals = {}
 
@@ -356,7 +356,7 @@ cols = st.columns(len(PRODUCT_SHEETS) + 1)
 cols[0].markdown(f"""
 <div style="
     background:#111;
-    padding:8px;
+    padding:7px;
     border-radius:12px;
     text-align:center;
     border:3px solid #949494;
@@ -373,7 +373,7 @@ for i, (name, val) in enumerate(product_totals.items()):
     cols[i+1].markdown(f"""
     <div style="
         background:#111;
-        padding:15px;
+        padding:7px;
         border-radius:12px;
         text-align:center;
         border:3px solid #949494;
