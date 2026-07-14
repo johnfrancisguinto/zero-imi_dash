@@ -425,4 +425,7 @@ for tab, (name, sheet_name) in zip(tabs, PRODUCT_SHEETS.items()):
         df = load_sheet(sheet_name)
         render_dashboard(df, name)
 
+
+# AUTO REFRESH
+st_autorefresh(interval=REFRESH_INTERVAL, key="refresh")
 st.caption("Auto-refresh every 5 minutes")
