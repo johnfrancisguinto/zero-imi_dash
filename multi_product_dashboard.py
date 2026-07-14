@@ -143,7 +143,34 @@ LIVE: IMI PRODUCTION DASHBOARD
 </div>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
 
+header {
+    visibility:hidden;
+}
+
+footer {
+    visibility:hidden;
+}
+
+#MainMenu {
+    visibility:hidden;
+}
+
+[data-testid="stToolbar"] {
+    display:none;
+}
+
+.block-container {
+    padding-top:0rem;
+    padding-bottom:0rem;
+    padding-left:1rem;
+    padding-right:1rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
 # Google Sheets
@@ -217,7 +244,7 @@ def render_dashboard(df, title):
 
     with left:
 
-        st.markdown("### 🛵 Units")
+        st.markdown("# 🛵 Units")
 
         for pc in station_order:
             serials = latest[latest["station"] == pc]["serial_number"].tolist()
@@ -233,7 +260,7 @@ def render_dashboard(df, title):
 
     with right:
 
-        st.markdown("### 🧭 WIP Trace")
+        st.markdown("# 🧭 WIP Trace")
 
         serial = st.selectbox(
             "VIN",
