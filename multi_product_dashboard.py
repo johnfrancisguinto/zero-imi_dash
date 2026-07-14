@@ -54,6 +54,7 @@ st.markdown("""
 /* ===== HEADERS ===== */
 h1{
     color:#FF3139;
+    text-shadow: 0 0 12px rgba(212,255,0,0.5);
     margin:0;
 }
 
@@ -123,23 +124,24 @@ display:flex;
 align-items:center;
 justify-content:center;
 gap:15px;
-margin-bottom:5px;
 ">
 
 <img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/Zero-Motorcycles-logo.png"
 width="120">
 
+<h1 style="
+color:#FF3139;
+font-size:36px;
+margin:0;
+">
+LIVE: IMI PRODUCTION DASHBOARD
+</h1>
+            
 </div>
 """, unsafe_allow_html=True)
 
 
-# <h1 style="
-# color:#FF3139;
-# font-size:36px;
-# margin:0;
-# ">
-# LIVE: IMI PRODUCTION DASHBOARD
-# </h1>
+
 
 # Google Sheets
 scope = [
@@ -212,7 +214,7 @@ def render_dashboard(df, title):
 
     with left:
 
-        # st.markdown("### 🛵 Units")
+        st.markdown("### 🛵 Units")
 
         for pc in station_order:
             serials = latest[latest["station"] == pc]["serial_number"].tolist()
@@ -228,7 +230,7 @@ def render_dashboard(df, title):
 
     with right:
 
-        # st.markdown("### 🧭 Serial Trace")
+        st.markdown("### 🧭 WIP Trace")
 
         serial = st.selectbox(
             "VIN",
