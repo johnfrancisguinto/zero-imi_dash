@@ -78,9 +78,9 @@ h2,h3{
 }
 
 .stTabs [role="tab"]{
-    font-size:18px;
+    font-size:15px;
     font-weight:bold;
-    padding:8px 14px;
+    padding:7px 12px;
     border-radius:10px;
     background-color:#222;
     color:white;
@@ -129,17 +129,17 @@ margin-bottom:5px;
 <img src="https://raw.githubusercontent.com/johnfrancisguinto/zero-imi_dash/main/Zero-Motorcycles-logo.png"
 width="120">
 
-<h1 style="
-color:#FF3139;
-font-size:36px;
-margin:0;
-">
-LIVE: IMI PRODUCTION DASHBOARD
-</h1>
-
 </div>
 """, unsafe_allow_html=True)
 
+
+# <h1 style="
+# color:#FF3139;
+# font-size:36px;
+# margin:0;
+# ">
+# LIVE: IMI PRODUCTION DASHBOARD
+# </h1>
 
 # Google Sheets
 scope = [
@@ -212,7 +212,7 @@ def render_dashboard(df, title):
 
     with left:
 
-        st.markdown("### 🛵 Units")
+        # st.markdown("### 🛵 Units")
 
         for pc in station_order:
             serials = latest[latest["station"] == pc]["serial_number"].tolist()
@@ -228,7 +228,7 @@ def render_dashboard(df, title):
 
     with right:
 
-        st.markdown("### 🧭 Serial Trace")
+        # st.markdown("### 🧭 Serial Trace")
 
         serial = st.selectbox(
             "VIN",
@@ -356,13 +356,13 @@ cols = st.columns(len(PRODUCT_SHEETS) + 1)
 cols[0].markdown(f"""
 <div style="
     background:#111;
-    padding:7px;
+    padding:6px;
     border-radius:12px;
     text-align:center;
     border:3px solid #949494;
 ">
-    <div style="font-size:20px;color:#C1E9E2;">ALL PRODUCTS</div>
-    <div style="font-size:36px;color:#949494;font-weight:bold;">
+    <div style="font-size:18px;color:#C1E9E2;">ALL PRODUCTS</div>
+    <div style="font-size:32px;color:#949494;font-weight:bold;">
         {total_all}
     </div>
 </div>
@@ -373,13 +373,13 @@ for i, (name, val) in enumerate(product_totals.items()):
     cols[i+1].markdown(f"""
     <div style="
         background:#111;
-        padding:7px;
+        padding:6px;
         border-radius:12px;
         text-align:center;
         border:3px solid #949494;
     ">
-        <div style="font-size:20px;color:#C1E9E2;">{name}</div>
-        <div style="font-size:36px;color:#949494;font-weight:bold;">
+        <div style="font-size:18px;color:#C1E9E2;">{name}</div>
+        <div style="font-size:32px;color:#949494;font-weight:bold;">
             {val}
         </div>
     </div>
