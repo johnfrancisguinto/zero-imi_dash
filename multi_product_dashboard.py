@@ -216,6 +216,40 @@ def process_df(df):
 
     return latest, stalled
 
+def get_production_counts(df):
+    if df.empty:
+        return 0, 0
+
+    now = datetime.now()
+
+    # Only completed units
+    completed = df[
+        (df["station"] == "FQC") &
+        (df["results"] == "PASS")
+    ].copy()
+
+    # Daily Count
+    today = now.date()
+
+    daily_count = (
+        completed[
+            completed["datetime"].dt.date == today
+        ]["serial_number"]
+        .nunique()
+    )
+
+    # Weekly Count (Sunday reset)
+    days_since_sunday = (now.weekday() + 1) % 7
+    last_sunday = now.date() - pd.Timedelta(days=days_since_sunday)
+
+    weekly_count = (
+        completed[
+            completed["datetime"].dt.date >= last_sunday
+        ]["serial_number"]
+        .nunique()
+    )
+
+    return daily_count, weekly_count
 
 def render_dashboard(df, title):
     # st.subheader(title)
@@ -226,11 +260,30 @@ def render_dashboard(df, title):
 
     latest, stalled = process_df(df)
 
-    # total = len(latest)
-    # st.metric("TOTAL ACTIVE SERIALS", total)
+    daily_count, weekly_count = get_production_counts(df)
 
-    # station counts
-    # counts = latest["station"].value_counts().to_dict()
+    kpi1, kpi2 = st.columns(2)
+
+    with kpi1:
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
+                {daily_count}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with kpi2:
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
+                {weekly_count}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
     station_order = STATIONS_PER_PRODUCT[title]
 
     # counts_full = {pc: counts.get(pc, 0) for pc in station_order}
