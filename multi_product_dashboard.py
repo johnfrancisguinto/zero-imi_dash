@@ -295,63 +295,8 @@ def render_dashboard(df, title):
         return 0
 
     latest, stalled = process_df(df)
-    
-    if title == "BIKE Line":
-    
-        st.subheader("🏷️ CURRENT SKU MIX")
-    
-        sku_counts = (
-            latest.groupby("sku")
-            .size()
-            .reset_index(name="count")
-            .sort_values("count", ascending=False)
-        )
-    
-        sku_cols = st.columns(
-            min(len(sku_counts), 6)
-        )
-    
-        for i, row in enumerate(sku_counts.itertuples()):
-    
-            with sku_cols[i % len(sku_cols)]:
-    
-                st.markdown(f"""
-                <div class='card'>
-                    <div style='font-size:16px'>
-                        {row.sku}
-                    </div>
-    
-                    <div style='font-size:30px;
-                                font-weight:bold;
-                                color:#FF3139'>
-                        {row.count}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
+        
     daily_count, weekly_count = get_production_counts(df)
-
-    kpi1, kpi2 = st.columns(2)
-
-    with kpi1:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
-            <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
-                {daily_count}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with kpi2:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
-            <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
-                {weekly_count}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
     station_order = STATIONS_PER_PRODUCT[title]
 
@@ -362,25 +307,118 @@ def render_dashboard(df, title):
     #     with cols[i]:
     #         st.metric(pc, counts_full[pc])
 
-    left,right = st.columns([1,3])
+    left_col, right_col = st.columns([1, 2])
 
     with left:
 
+        if title == "BIKE Line":
+        
+            st.subheader("🏷️ CURRENT SKU MIX")
+        
+            sku_counts = (
+                latest.groupby("sku")
+                .size()
+                .reset_index(name="count")
+                .sort_values("count", ascending=False)
+            )
+        
+            sku_cols = st.columns(
+                min(len(sku_counts), 6)
+            )
+        
+            for i, row in enumerate(sku_counts.itertuples()):
+        
+                with sku_cols[i % len(sku_cols)]:
+        
+                    st.markdown(f"""
+                    <div class='card'>
+                        <div style='font-size:16px'>
+                            {row.sku}
+                        </div>
+                    
+                        <div style='font-size:30px;
+                                    font-weight:bold;
+                                    color:#FF3139'>
+                            {row.count}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
         st.markdown("### 🛵 Units")
 
         for pc in station_order:
-            serials = latest[latest["station"] == pc]["serial_number"].tolist()
-
+        
+            station_df = latest[
+                latest["station"] == pc
+            ]
+        
             with st.expander(
-                f"{pc} ({len(serials)})",
+                f"{pc} ({len(station_df)})",
                 expanded=False
             ):
-                st.write(
-                    ", ".join(serials[:20])
-                    if serials else "No units"
-                )
+        
+                if station_df.empty:
+                    st.write("No units")
+        
+                else:
+        
+                    badges = []
+        
+                    for _, row in station_df.iterrows():
+        
+                        vin = row["serial_number"]
+        
+                        result = str(
+                            row["results"]
+                        ).upper()
+        
+                        bg = "#00AA00" if result == "PASS" else "#CC0000"
+        
+                        badges.append(
+                            f"""
+                            <span style="
+                                background:{bg};
+                                color:white;
+                                padding:3px 8px;
+                                border-radius:8px;
+                                margin:2px;
+                                display:inline-block;
+                                font-size:12px;
+                                font-weight:bold;
+                            ">
+                                {vin}
+                            </span>
+                            """
+                        )
+        
+                    st.markdown(
+                        "".join(badges),
+                        unsafe_allow_html=True
+                    )
 
     with right:
+        
+        kpi1, kpi2 = st.columns(2)
+    
+        with kpi1:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
+                <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
+                    {daily_count}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+        with kpi2:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
+                <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
+                    {weekly_count}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("### 🧭 WIP Trace")
 
