@@ -309,7 +309,7 @@ def render_dashboard(df, title):
 
     left_col, right_col = st.columns([1, 2])
 
-    with left:
+    with left_col:
 
         if title == "BIKE Line":
         
@@ -396,7 +396,7 @@ def render_dashboard(df, title):
                         unsafe_allow_html=True
                     )
 
-    with right:
+    with right_col:
         
         kpi1, kpi2 = st.columns(2)
     
