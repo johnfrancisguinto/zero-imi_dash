@@ -322,27 +322,14 @@ def render_dashboard(df, title):
                 .sort_values("count", ascending=False)
             )
         
-            sku_cols = st.columns(
-                min(len(sku_counts), 6)
-            )
-        
+            sku_cols = st.columns(2)
+            
             for i, row in enumerate(sku_counts.itertuples()):
-        
-                with sku_cols[i % len(sku_cols)]:
-        
-                    st.markdown(f"""
-                    <div class='card'>
-                        <div style='font-size:16px'>
-                            {row.sku}
-                        </div>
-                    
-                        <div style='font-size:30px;
-                                    font-weight:bold;
-                                    color:#FF3139'>
-                            {row.count}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                with sku_cols[i % 2]:
+                    st.metric(
+                        label=row.sku,
+                        value=row.count
+                    )
                 
         st.markdown("### 🛵 Units")
 
