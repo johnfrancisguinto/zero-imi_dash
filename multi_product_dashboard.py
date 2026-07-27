@@ -313,7 +313,7 @@ def render_dashboard(df, title):
 
         if title == "BIKE Line":
         
-            st.subheader("###🏷️ CURRENT SKU MIX")
+            st.subheader("🏷️ SKU on Line")
         
             sku_counts = (
                 latest.groupby("sku")
