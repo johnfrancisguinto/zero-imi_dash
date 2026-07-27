@@ -172,7 +172,42 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
+TYPE_MAP = {
+    "D": "ADVENTURE",
+    "Z": "STREET"
+}
 
+VARIANT_MAP = {
+    "FD": "SRF",
+    "FE": "SRS",
+    "FG": "SR",
+    "FS": "S",
+    "ZA": "DSRX",
+    "ZB": "DSR",
+    "ZS": "DS",
+    "XD": "FX",
+    "XF": "FXE"
+}
+
+MY_MAP = {
+    "R": "24MY",
+    "S": "25MY",
+    "T": "26MY",
+    "V": "27MY"
+}
+
+
+def get_sku(vin):
+    try:
+        product_type = TYPE_MAP.get(vin[3], "UNKNOWN")
+        variant = VARIANT_MAP.get(vin[4:6], "UNKNOWN")
+        model_year = MY_MAP.get(vin[9], "UNKNOWN")
+
+        return f"{variant} {model_year}"
+
+    except Exception:
+        return "UNKNOWN"
+        
 # Google Sheets
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -199,6 +234,7 @@ def load_sheet(sheet_name):
     df = df.map(lambda x: str(x).strip())
     df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
     df = df.sort_values("datetime", ascending=False)
+    df["sku"] = df["serial_number"].astype(str).apply(get_sku)
 
     return df
 
@@ -259,6 +295,39 @@ def render_dashboard(df, title):
         return 0
 
     latest, stalled = process_df(df)
+    
+    if title == "BIKE Line":
+    
+        st.subheader("🏷️ CURRENT SKU MIX")
+    
+        sku_counts = (
+            latest.groupby("sku")
+            .size()
+            .reset_index(name="count")
+            .sort_values("count", ascending=False)
+        )
+    
+        sku_cols = st.columns(
+            min(len(sku_counts), 6)
+        )
+    
+        for i, row in enumerate(sku_counts.itertuples()):
+    
+            with sku_cols[i % len(sku_cols)]:
+    
+                st.markdown(f"""
+                <div class='card'>
+                    <div style='font-size:16px'>
+                        {row.sku}
+                    </div>
+    
+                    <div style='font-size:30px;
+                                font-weight:bold;
+                                color:#FF3139'>
+                        {row.count}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
     daily_count, weekly_count = get_production_counts(df)
 
