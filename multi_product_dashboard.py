@@ -759,7 +759,7 @@ if selected_product == "BIKE Line":
         st.subheader("📝 PDI Entry")
 
         latest, _ = process_df(df)
-
+        
         available_pdi = latest[
             (latest["station"] == "FQC")
             &
@@ -781,13 +781,23 @@ if selected_product == "BIKE Line":
                 .worksheet("Bike_line")
             )
 
-            selected_units = st.multiselect(
-                "Select Units Ready for PDI",
-                available_pdi[
+            pdi_table = pd.DataFrame({
+                "Select": False,
+                "VIN": available_pdi[
                     "serial_number"
-                ].tolist(),
-                default=[]
+                ].tolist()
+            })
+
+            edited = st.data_editor(
+                pdi_table,
+                hide_index=True,
+                use_container_width=True,
+                disabled=["VIN"]
             )
+
+            selected_units = edited[
+                edited["Select"]
+            ]["VIN"].tolist()
 
             col1, col2 = st.columns(2)
 
@@ -845,12 +855,33 @@ if selected_product == "BIKE Line":
         latest, _ = process_df(
             bike_df
         )
-
         available_shipment = latest[
             (latest["station"] == "PDI")
             &
             (latest["results"] == "PASS")
         ]
+
+        shipment_id = st.text_input(
+            "Shipment ID"
+        )
+
+        ship_table = pd.DataFrame({
+            "Select": False,
+            "VIN": available_shipment[
+                "serial_number"
+            ].tolist()
+        })
+
+        edited = st.data_editor(
+            ship_table,
+            hide_index=True,
+            use_container_width=True,
+            disabled=["VIN"]
+        )
+
+        selected_units = edited[
+            edited["Select"]
+        ]["VIN"].tolist()
 
         col1, col2, col3 = st.columns(3)
 
@@ -863,7 +894,7 @@ if selected_product == "BIKE Line":
         with col2:
             st.metric(
                 "Selected",
-                0
+                len(selected_units)
             )
 
         with col3:
@@ -874,26 +905,6 @@ if selected_product == "BIKE Line":
                         latest["station"] == "Shipped"
                     ]
                 )
-            )
-
-        shipment_id = st.text_input(
-            "Shipment ID"
-        )
-
-        selected_units = st.multiselect(
-            "Units to Ship",
-            available_shipment[
-                "serial_number"
-            ].tolist(),
-            default=[]
-        )
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.metric(
-                "Selected Units",
-                len(selected_units)
             )
 
         bike_sheet = (
@@ -909,7 +920,6 @@ if selected_product == "BIKE Line":
             )
             .worksheet("Shipments")
         )
-
         if st.button(
             f"🚚 Ship {len(selected_units)} Unit(s)",
             use_container_width=True,
@@ -953,7 +963,8 @@ if selected_product == "BIKE Line":
                     f"{len(selected_units)} unit(s) shipped."
                 )
 
-                st.rerun()
+        st.rerun()
+
 else:
 
     render_dashboard(df, selected_product)
