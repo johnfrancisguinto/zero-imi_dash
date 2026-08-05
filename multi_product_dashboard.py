@@ -19,13 +19,6 @@ PRODUCT_SHEETS = {
     "CII Line": "CII_line",
 }
 
-# station order per product (edit if needed)
-STATIONS_PER_PRODUCT = {
-    "BIKE Line": ["MBB Config", "PREL", "FQC"],  # 3 stations
-    "BCB Line": ["BAT0", "BAT3", "FQC"], # 4 stations
-    "CII Line": ["BAT0", "BAT2/3", "Post-Shower", "FQC"], # 5 stations
-}
-
 st.set_page_config(
     page_title="Zero Dashboard",
     page_icon="Zero_logo.ico",
@@ -251,6 +244,21 @@ def process_df(df):
     stalled = latest[latest["hours"] > 24]
 
     return latest, stalled
+def get_station_order(df):
+
+    if df.empty:
+        return []
+
+    stations = (
+        df["station"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+        .tolist()
+    )
+
+    return stations
 
 def get_production_counts(df):
     if df.empty:
@@ -298,7 +306,7 @@ def render_dashboard(df, title):
         
     daily_count, weekly_count = get_production_counts(df)
 
-    station_order = STATIONS_PER_PRODUCT[title]
+    station_order = get_station_order(df)
 
     # counts_full = {pc: counts.get(pc, 0) for pc in station_order}
 
@@ -312,7 +320,10 @@ def render_dashboard(df, title):
     with left_col:
 
         if title == "BIKE Line":
-        
+
+            latest = latest[
+                latest["station"] != "Shipped"
+    ]
             st.subheader("🏷️ SKU on Line")
         
             sku_counts = (
@@ -521,11 +532,23 @@ def render_dashboard(df, title):
 product_totals = {}
 
 for name, sheet_name in PRODUCT_SHEETS.items():
+
     df_temp = load_sheet(sheet_name)
+
     if df_temp.empty:
+
         product_totals[name] = 0
+
     else:
+
         latest, _ = process_df(df_temp)
+
+        if name == "BIKE Line":
+
+            latest = latest[
+                latest["station"] != "Shipped"
+            ]
+
         product_totals[name] = len(latest)
 
 total_all = sum(product_totals.values())
@@ -565,12 +588,125 @@ for i, (name, val) in enumerate(product_totals.items()):
     """, unsafe_allow_html=True)
 
 # ================= TABS =================
-tabs = st.tabs(list(PRODUCT_SHEETS.keys()))
+tab_names = list(PRODUCT_SHEETS.keys()) + [
+    "🚚 Bike Logistics"
+]
 
-for tab, (name, sheet_name) in zip(tabs, PRODUCT_SHEETS.items()):
+tabs = st.tabs(tab_names)
+
+for tab, (name, sheet_name) in zip(
+    tabs[:len(PRODUCT_SHEETS)],
+    PRODUCT_SHEETS.items()
+):
+    
     with tab:
         df = load_sheet(sheet_name)
         render_dashboard(df, name)
+
+    with tabs[-1]:
+
+        st.subheader("🚚 Bike Logistics")
+
+        bike_df = load_sheet("Bike_line")
+
+        latest, _ = process_df(bike_df)
+
+        available = latest[
+            latest["station"] == "PDI"
+        ]
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.metric(
+                "Available For Shipment",
+                len(available)
+            )
+
+        with col2:
+
+            shipped_count = len(
+                latest[
+                    latest["station"] == "Shipped"
+                ]
+            )
+
+            st.metric(
+                "Shipped Units",
+                shipped_count
+            )
+
+        st.divider()
+
+        selected_units = st.multiselect(
+            "Units to Ship",
+            available["serial_number"].tolist()
+        )
+
+        shipment_id = st.text_input(
+            "Shipment ID"
+        )
+
+        if st.button(
+            "🚚 Mark Selected as Shipped"
+        ):
+
+            if not shipment_id:
+
+                st.error(
+                    "Enter Shipment ID"
+                )
+
+            elif not selected_units:
+
+                st.error(
+                    "Select units"
+                )
+
+            else:
+
+                bike_sheet = (
+                    client.open_by_key(
+                        SPREADSHEET_ID
+                    )
+                    .worksheet("Bike_line")
+                )
+
+                ship_sheet = (
+                    client.open_by_key(
+                        SPREADSHEET_ID
+                    )
+                    .worksheet("Shipments")
+                )
+
+                now = (
+                    datetime.now()
+                    .strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                )
+
+                for serial in selected_units:
+
+                    bike_sheet.append_row([
+                        now,
+                        serial,
+                        "Shipped",
+                        "PASS"
+                    ])
+
+                    ship_sheet.append_row([
+                        now,
+                        shipment_id,
+                        serial
+                    ])
+
+                st.success(
+                    f"{len(selected_units)} unit(s) shipped"
+                )
+
+                st.rerun()
 
 
 # AUTO REFRESH
