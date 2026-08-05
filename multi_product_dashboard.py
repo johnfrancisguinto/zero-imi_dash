@@ -527,7 +527,7 @@ def render_dashboard(df, title):
     return total
 
 # ================= GLOBAL SUMMARY =================
-# st.subheader("📈 SUMMARY")
+# ================= GLOBAL SUMMARY =================
 
 product_totals = {}
 
@@ -553,26 +553,16 @@ for name, sheet_name in PRODUCT_SHEETS.items():
 
 total_all = sum(product_totals.values())
 
-cols = st.columns(len(PRODUCT_SHEETS) + 1)
-# cols[0].metric("ALL PRODUCTS", total_all)
-cols[0].markdown(f"""
-<div style="
-    background:#111;
-    padding:6px;
-    border-radius:12px;
-    text-align:center;
-    border:3px solid #949494;
-">
-    <div style="font-size:18px;color:#C1E9E2;">ALL PRODUCTS</div>
-    <div style="font-size:32px;color:#949494;font-weight:bold;">
-        {total_all}
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# ================= PRODUCT SELECTOR =================
 
-for i, (name, val) in enumerate(product_totals.items()):
-    # cols[i+1].metric(name, val)
-    cols[i+1].markdown(f"""
+if "selected_product" not in st.session_state:
+    st.session_state.selected_product = "BIKE Line"
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+
+    st.markdown(f"""
     <div style="
         background:#111;
         padding:6px;
@@ -580,78 +570,101 @@ for i, (name, val) in enumerate(product_totals.items()):
         text-align:center;
         border:3px solid #949494;
     ">
-        <div style="font-size:18px;color:#C1E9E2;">{name}</div>
+        <div style="font-size:18px;color:#C1E9E2;">ALL PRODUCTS</div>
         <div style="font-size:32px;color:#949494;font-weight:bold;">
-            {val}
+            {total_all}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# ================= TABS =================
-tab_names = list(PRODUCT_SHEETS.keys()) + [
-    "📝 PDI Entry",
-    "🚚 Bike Logistics"
-]
+with col2:
 
-tabs = st.tabs(tab_names)
+    if st.button(
+        f"🛵 BIKE Line\n\n{product_totals['BIKE Line']}",
+        use_container_width=True
+    ):
+        st.session_state.selected_product = "BIKE Line"
 
-for tab, (name, sheet_name) in zip(
-    tabs[:len(PRODUCT_SHEETS)],
-    PRODUCT_SHEETS.items()
-):
-    
-    with tab:
-        df = load_sheet(sheet_name)
-        render_dashboard(df, name)
+with col3:
 
-    with tabs[-1]:
+    if st.button(
+        f"🔋 BCB Line\n\n{product_totals['BCB Line']}",
+        use_container_width=True
+    ):
+        st.session_state.selected_product = "BCB Line"
 
-        st.subheader("📝 PDI Entry")
+with col4:
 
-        vin = st.text_input(
-            "VIN / Serial Number"
-        )
+    if st.button(
+        f"⚙️ CII Line\n\n{product_totals['CII Line']}",
+        use_container_width=True
+    ):
+        st.session_state.selected_product = "CII Line"
 
-        result = st.selectbox(
-            "PDI Result",
-            ["PASS", "FAIL"]
-        )
 
-        if st.button("Submit PDI"):
+selected_product = st.session_state.selected_product
 
-            if not vin:
+sheet_name = PRODUCT_SHEETS[selected_product]
 
-                st.error(
-                    "Enter VIN"
-                )
+df = load_sheet(sheet_name)
 
-            else:
+st.divider()
 
-                bike_sheet = (
-                    client.open_by_key(
-                        SPREADSHEET_ID
-                    )
-                    .worksheet("Bike_line")
-                )
+# ================= BIKE LINE =================
 
-                bike_sheet.append_row([
-                    datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
-                    vin.strip(),
+if selected_product == "BIKE Line":
+
+    dashboard_tab, pdi_tab, logistics_tab = st.tabs([
+        "📊 Dashboard",
+        "📝 PDI Entry",
+        "🚚 Bike Logistics"
+    ])
+
+    with dashboard_tab:
+        render_dashboard(df, selected_product)
+
+    with pdi_tab:
+
+        latest, _ = process_df(df)
+
+        available_pdi = latest[
+            (latest["station"] == "FQC")
+            & (latest["results"] == "PASS")
+        ]
+
+        if available_pdi.empty:
+
+            st.info("No units available for PDI.")
+
+        else:
+
+            vin = st.selectbox(
+                "Select Unit",
+                available_pdi["serial_number"].tolist()
+            )
+
+            result = st.selectbox(
+                "PDI Result",
+                ["PASS", "FAIL"]
+            )
+
+            if st.button("Submit PDI"):
+
+                client.open_by_key(
+                    SPREADSHEET_ID
+                ).worksheet(
+                    "Bike_line"
+                ).append_row([
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    vin,
                     "PDI",
                     result
                 ])
 
-                st.success(
-                    f"{vin} recorded at PDI"
-                )
-
+                st.success(f"{vin} recorded at PDI")
                 st.rerun()
 
-    with tabs[-2]:
-
-        st.subheader("🚚 Bike Logistics")
+    with logistics_tab:
 
         bike_df = load_sheet("Bike_line")
 
@@ -663,27 +676,19 @@ for tab, (name, sheet_name) in zip(
 
         col1, col2 = st.columns(2)
 
-        with col1:
+        col1.metric(
+            "Available For Shipment",
+            len(available)
+        )
 
-            st.metric(
-                "Available For Shipment",
-                len(available)
-            )
-
-        with col2:
-
-            shipped_count = len(
+        col2.metric(
+            "Shipped Units",
+            len(
                 latest[
                     latest["station"] == "Shipped"
                 ]
             )
-
-            st.metric(
-                "Shipped Units",
-                shipped_count
-            )
-
-        st.divider()
+        )
 
         selected_units = st.multiselect(
             "Units to Ship",
@@ -694,66 +699,44 @@ for tab, (name, sheet_name) in zip(
             "Shipment ID"
         )
 
-        if st.button(
-            "🚚 Mark Selected as Shipped"
-        ):
+        if st.button("🚚 Mark Selected as Shipped"):
 
-            if not shipment_id:
+            bike_sheet = client.open_by_key(
+                SPREADSHEET_ID
+            ).worksheet("Bike_line")
 
-                st.error(
-                    "Enter Shipment ID"
-                )
+            ship_sheet = client.open_by_key(
+                SPREADSHEET_ID
+            ).worksheet("Shipments")
 
-            elif not selected_units:
+            now = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-                st.error(
-                    "Select units"
-                )
+            for serial in selected_units:
 
-            else:
+                bike_sheet.append_row([
+                    now,
+                    serial,
+                    "Shipped",
+                    "PASS"
+                ])
 
-                bike_sheet = (
-                    client.open_by_key(
-                        SPREADSHEET_ID
-                    )
-                    .worksheet("Bike_line")
-                )
+                ship_sheet.append_row([
+                    now,
+                    shipment_id,
+                    serial
+                ])
 
-                ship_sheet = (
-                    client.open_by_key(
-                        SPREADSHEET_ID
-                    )
-                    .worksheet("Shipments")
-                )
+            st.success(
+                f"{len(selected_units)} unit(s) shipped"
+            )
 
-                now = (
-                    datetime.now()
-                    .strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
-                )
+            st.rerun()
 
-                for serial in selected_units:
+else:
 
-                    bike_sheet.append_row([
-                        now,
-                        serial,
-                        "Shipped",
-                        "PASS"
-                    ])
-
-                    ship_sheet.append_row([
-                        now,
-                        shipment_id,
-                        serial
-                    ])
-
-                st.success(
-                    f"{len(selected_units)} unit(s) shipped"
-                )
-
-                st.rerun()
-
+    render_dashboard(df, selected_product)
 
 # AUTO REFRESH
 st_autorefresh(interval=REFRESH_INTERVAL, key="refresh")
