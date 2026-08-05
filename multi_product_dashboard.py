@@ -560,6 +560,10 @@ if "selected_product" not in st.session_state:
 
 col1, col2, col3, col4 = st.columns(4)
 
+selected = st.session_state.selected_product
+
+# ================= ALL PRODUCTS =================
+
 with col1:
 
     st.markdown(f"""
@@ -570,36 +574,126 @@ with col1:
         text-align:center;
         border:3px solid #949494;
     ">
-        <div style="font-size:18px;color:#C1E9E2;">ALL PRODUCTS</div>
-        <div style="font-size:32px;color:#949494;font-weight:bold;">
+        <div style="font-size:18px;color:#C1E9E2;">
+            ALL PRODUCTS
+        </div>
+        <div style="
+            font-size:32px;
+            color:#949494;
+            font-weight:bold;
+        ">
             {total_all}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
+
+# ================= BIKE =================
+
 with col2:
 
+    bike_border = "#00ff00" if selected == "BIKE Line" else "#949494"
+
+    st.markdown(f"""
+    <div style="
+        background:#111;
+        padding:6px;
+        border-radius:12px;
+        text-align:center;
+        border:3px solid {bike_border};
+    ">
+        <div style="font-size:18px;color:#C1E9E2;">
+            🛵 BIKE Line
+        </div>
+        <div style="
+            font-size:32px;
+            color:{bike_border};
+            font-weight:bold;
+        ">
+            {product_totals['BIKE Line']}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if st.button(
-        f"🛵 BIKE Line\n\n{product_totals['BIKE Line']}",
+        "Select Bike",
+        key="bike_select",
         use_container_width=True
     ):
         st.session_state.selected_product = "BIKE Line"
+        st.rerun()
+
+
+# ================= BCB =================
 
 with col3:
 
+    bcb_border = "#00ff00" if selected == "BCB Line" else "#949494"
+
+    st.markdown(f"""
+    <div style="
+        background:#111;
+        padding:6px;
+        border-radius:12px;
+        text-align:center;
+        border:3px solid {bcb_border};
+    ">
+        <div style="font-size:18px;color:#C1E9E2;">
+            🔋 BCB Line
+        </div>
+        <div style="
+            font-size:32px;
+            color:{bcb_border};
+            font-weight:bold;
+        ">
+            {product_totals['BCB Line']}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if st.button(
-        f"🔋 BCB Line\n\n{product_totals['BCB Line']}",
+        "Select BCB",
+        key="bcb_select",
         use_container_width=True
     ):
         st.session_state.selected_product = "BCB Line"
+        st.rerun()
+
+
+# ================= CII =================
 
 with col4:
 
+    cii_border = "#00ff00" if selected == "CII Line" else "#949494"
+
+    st.markdown(f"""
+    <div style="
+        background:#111;
+        padding:6px;
+        border-radius:12px;
+        text-align:center;
+        border:3px solid {cii_border};
+    ">
+        <div style="font-size:18px;color:#C1E9E2;">
+            ⚙️ CII Line
+        </div>
+        <div style="
+            font-size:32px;
+            color:{cii_border};
+            font-weight:bold;
+        ">
+            {product_totals['CII Line']}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if st.button(
-        f"⚙️ CII Line\n\n{product_totals['CII Line']}",
+        "Select CII",
+        key="cii_select",
         use_container_width=True
     ):
         st.session_state.selected_product = "CII Line"
+        st.rerun()
 
 
 selected_product = st.session_state.selected_product
@@ -625,6 +719,8 @@ if selected_product == "BIKE Line":
 
     with pdi_tab:
 
+        st.subheader("📝 PDI Entry")
+
         latest, _ = process_df(df)
 
         available_pdi = latest[
@@ -634,106 +730,237 @@ if selected_product == "BIKE Line":
 
         if available_pdi.empty:
 
-            st.info("No units available for PDI.")
+            st.info(
+                "No units available for PDI."
+            )
 
         else:
 
-            vin = st.selectbox(
-                "Select Unit",
+            bike_sheet = (
+                client.open_by_key(
+                    SPREADSHEET_ID
+                )
+                .worksheet("Bike_line")
+            )
+
+            st.markdown("### Batch PDI")
+
+            selected_units = st.multiselect(
+                "Select Units",
                 available_pdi["serial_number"].tolist()
             )
 
-            result = st.selectbox(
-                "PDI Result",
-                ["PASS", "FAIL"]
-            )
+            if st.button(
+                "✅ Mark Selected as PDI PASS"
+            ):
 
-            if st.button("Submit PDI"):
+                now = datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
 
-                client.open_by_key(
-                    SPREADSHEET_ID
-                ).worksheet(
-                    "Bike_line"
-                ).append_row([
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    vin,
-                    "PDI",
-                    result
-                ])
+                for vin in selected_units:
 
-                st.success(f"{vin} recorded at PDI")
+                    bike_sheet.append_row([
+                        now,
+                        vin,
+                        "PDI",
+                        "PASS"
+                    ])
+
+                st.success(
+                    f"{len(selected_units)} unit(s) updated."
+                )
+
                 st.rerun()
 
+            st.divider()
+
+            st.markdown("### Individual PDI")
+
+            for _, row in available_pdi.iterrows():
+
+                col1, col2 = st.columns([4,1])
+
+                with col1:
+                    st.write(
+                        row["serial_number"]
+                    )
+
+                with col2:
+
+                    if st.button(
+                        "✅",
+                        key=f"pdi_{row['serial_number']}"
+                    ):
+
+                        bike_sheet.append_row([
+                            datetime.now().strftime(
+                                "%Y-%m-%d %H:%M:%S"
+                            ),
+                            row["serial_number"],
+                            "PDI",
+                            "PASS"
+                        ])
+
+                        st.success(
+                            f"{row['serial_number']} updated."
+                        )
+
+                        st.rerun()
+
     with logistics_tab:
+
+        st.subheader("🚚 Bike Logistics")
 
         bike_df = load_sheet("Bike_line")
 
         latest, _ = process_df(bike_df)
 
-        available = latest[
-            latest["station"] == "PDI"
+        available_shipment = latest[
+            (latest["station"] == "PDI")
+            & (latest["results"] == "PASS")
         ]
 
         col1, col2 = st.columns(2)
 
-        col1.metric(
-            "Available For Shipment",
-            len(available)
-        )
-
-        col2.metric(
-            "Shipped Units",
-            len(
-                latest[
-                    latest["station"] == "Shipped"
-                ]
+        with col1:
+            st.metric(
+                "Available For Shipment",
+                len(available_shipment)
             )
+
+        with col2:
+            st.metric(
+                "Shipped Units",
+                len(
+                    latest[
+                        latest["station"] == "Shipped"
+                    ]
+                )
+            )
+
+        bike_sheet = (
+            client.open_by_key(
+                SPREADSHEET_ID
+            )
+            .worksheet("Bike_line")
         )
 
-        selected_units = st.multiselect(
-            "Units to Ship",
-            available["serial_number"].tolist()
+        ship_sheet = (
+            client.open_by_key(
+                SPREADSHEET_ID
+            )
+            .worksheet("Shipments")
         )
+
+        st.divider()
+
+        # ===============================
+        # BATCH SHIPMENT
+        # ===============================
+
+        st.markdown("### Batch Shipment")
 
         shipment_id = st.text_input(
             "Shipment ID"
         )
 
-        if st.button("🚚 Mark Selected as Shipped"):
+        selected_units = st.multiselect(
+            "Units to Ship",
+            available_shipment[
+                "serial_number"
+            ].tolist()
+        )
 
-            bike_sheet = client.open_by_key(
-                SPREADSHEET_ID
-            ).worksheet("Bike_line")
+        if st.button(
+            "🚚 Mark Selected as Shipped"
+        ):
 
-            ship_sheet = client.open_by_key(
-                SPREADSHEET_ID
-            ).worksheet("Shipments")
+            if not shipment_id:
 
-            now = datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+                st.error(
+                    "Enter Shipment ID"
+                )
 
-            for serial in selected_units:
+            elif not selected_units:
 
-                bike_sheet.append_row([
-                    now,
-                    serial,
-                    "Shipped",
-                    "PASS"
-                ])
+                st.error(
+                    "Select units"
+                )
 
-                ship_sheet.append_row([
-                    now,
-                    shipment_id,
-                    serial
-                ])
+            else:
 
-            st.success(
-                f"{len(selected_units)} unit(s) shipped"
-            )
+                now = datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
 
-            st.rerun()
+                for vin in selected_units:
 
+                    bike_sheet.append_row([
+                        now,
+                        vin,
+                        "Shipped",
+                        "PASS"
+                    ])
+
+                    ship_sheet.append_row([
+                        now,
+                        shipment_id,
+                        vin
+                    ])
+
+                st.success(
+                    f"{len(selected_units)} unit(s) shipped."
+                )
+
+                st.rerun()
+
+        st.divider()
+
+        # ===============================
+        # INDIVIDUAL SHIPMENT
+        # ===============================
+
+        st.markdown("### Individual Shipment")
+
+        for _, row in available_shipment.iterrows():
+
+            col1, col2 = st.columns([4, 1])
+
+            with col1:
+                st.write(
+                    row["serial_number"]
+                )
+
+            with col2:
+
+                if st.button(
+                    "🚚",
+                    key=f"ship_{row['serial_number']}"
+                ):
+
+                    now = datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+
+                    bike_sheet.append_row([
+                        now,
+                        row["serial_number"],
+                        "Shipped",
+                        "PASS"
+                    ])
+
+                    ship_sheet.append_row([
+                        now,
+                        "MANUAL",
+                        row["serial_number"]
+                    ])
+
+                    st.success(
+                        f"{row['serial_number']} shipped."
+                    )
+
+                    st.rerun()
 else:
 
     render_dashboard(df, selected_product)
