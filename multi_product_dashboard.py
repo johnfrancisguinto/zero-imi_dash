@@ -115,7 +115,7 @@ st.markdown("""
 <style>
 
 /* Product selector buttons */
-div[data-testid="stButton"] button[kind="secondary"] {
+div[data-testid="stButton"] > button {
     background:#111;
     color:#C1E9E2;
     border:3px solid #949494;
@@ -123,12 +123,12 @@ div[data-testid="stButton"] button[kind="secondary"] {
     min-height:90px;
     font-size:18px;
     font-weight:bold;
+    white-space:pre-line;
 }
 
-/* Hover */
-div[data-testid="stButton"] button[kind="secondary"]:hover {
-    border:3px solid #00AEEF;
-    color:#00AEEF;
+div[data-testid="stButton"] > button:hover {
+    border:3px solid #00ff00;
+    color:#00ff00;
 }
 
 </style>
@@ -614,36 +614,36 @@ with col1:
 
 with col2:
 
-    bike_border = (
-        "#00FF00"
-        if selected == "BIKE Line"
-        else "#949494"
-    )
+    # bike_border = (
+    #     "#00FF00"
+    #     if selected == "BIKE Line"
+    #     else "#949494"
+    # )
 
-    st.markdown(f"""
-    <div style="
-        background:#111;
-        padding:6px;
-        border-radius:12px;
-        text-align:center;
-        border:3px solid {bike_border};
-        margin-bottom:5px;
-    ">
-        <div style="font-size:18px;color:#C1E9E2;">
-            🛵 BIKE Line
-        </div>
-        <div style="
-            font-size:32px;
-            color:{bike_border};
-            font-weight:bold;
-        ">
-            {product_totals['BIKE Line']}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # st.markdown(f"""
+    # <div style="
+    #     background:#111;
+    #     padding:6px;
+    #     border-radius:12px;
+    #     text-align:center;
+    #     border:3px solid {bike_border};
+    #     margin-bottom:5px;
+    # ">
+    #     <div style="font-size:18px;color:#C1E9E2;">
+    #         🛵 BIKE Line
+    #     </div>
+    #     <div style="
+    #         font-size:32px;
+    #         color:{bike_border};
+    #         font-weight:bold;
+    #     ">
+    #         {product_totals['BIKE Line']}
+    #     </div>
+    # </div>
+    # """, unsafe_allow_html=True)
 
     if st.button(
-        "",
+        f"🛵 BIKE Line\n{product_totals['BIKE Line']}",
         key="bike_line",
         use_container_width=True
     ):
@@ -655,36 +655,36 @@ with col2:
 
 with col3:
 
-    bcb_border = (
-        "#00FF00"
-        if selected == "BCB Line"
-        else "#949494"
-    )
+    # bcb_border = (
+    #     "#00FF00"
+    #     if selected == "BCB Line"
+    #     else "#949494"
+    # )
 
-    st.markdown(f"""
-    <div style="
-        background:#111;
-        padding:6px;
-        border-radius:12px;
-        text-align:center;
-        border:3px solid {bcb_border};
-        margin-bottom:5px;
-    ">
-        <div style="font-size:18px;color:#C1E9E2;">
-            🔋 BCB Line
-        </div>
-        <div style="
-            font-size:32px;
-            color:{bcb_border};
-            font-weight:bold;
-        ">
-            {product_totals['BCB Line']}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # st.markdown(f"""
+    # <div style="
+    #     background:#111;
+    #     padding:6px;
+    #     border-radius:12px;
+    #     text-align:center;
+    #     border:3px solid {bcb_border};
+    #     margin-bottom:5px;
+    # ">
+    #     <div style="font-size:18px;color:#C1E9E2;">
+    #         🔋 BCB Line
+    #     </div>
+    #     <div style="
+    #         font-size:32px;
+    #         color:{bcb_border};
+    #         font-weight:bold;
+    #     ">
+    #         {product_totals['BCB Line']}
+    #     </div>
+    # </div>
+    # """, unsafe_allow_html=True)
 
     if st.button(
-        "",
+        f"🔋 BCB Line\n{product_totals['BCB Line']}",
         key="bcb_line",
         use_container_width=True
     ):
@@ -696,36 +696,36 @@ with col3:
 
 with col4:
 
-    cii_border = (
-        "#00FF00"
-        if selected == "CII Line"
-        else "#949494"
-    )
+    # cii_border = (
+    #     "#00FF00"
+    #     if selected == "CII Line"
+    #     else "#949494"
+    # )
 
-    st.markdown(f"""
-    <div style="
-        background:#111;
-        padding:6px;
-        border-radius:12px;
-        text-align:center;
-        border:3px solid {cii_border};
-        margin-bottom:5px;
-    ">
-        <div style="font-size:18px;color:#C1E9E2;">
-            ⚙️ CII Line
-        </div>
-        <div style="
-            font-size:32px;
-            color:{cii_border};
-            font-weight:bold;
-        ">
-            {product_totals['CII Line']}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # st.markdown(f"""
+    # <div style="
+    #     background:#111;
+    #     padding:6px;
+    #     border-radius:12px;
+    #     text-align:center;
+    #     border:3px solid {cii_border};
+    #     margin-bottom:5px;
+    # ">
+    #     <div style="font-size:18px;color:#C1E9E2;">
+    #         ⚙️ CII Line
+    #     </div>
+    #     <div style="
+    #         font-size:32px;
+    #         color:{cii_border};
+    #         font-weight:bold;
+    #     ">
+    #         {product_totals['CII Line']}
+    #     </div>
+    # </div>
+    # """, unsafe_allow_html=True)
 
     if st.button(
-        "",
+        f"⚙️ CII Line\n{product_totals['CII Line']}",
         key="cii_line",
         use_container_width=True
     ):
@@ -799,8 +799,8 @@ if selected_product == "BIKE Line":
 
                     bike_sheet.append_row([
                         now,
-                        vin,
                         "PDI",
+                        vin,
                         "PASS"
                     ])
 
