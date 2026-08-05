@@ -255,7 +255,7 @@ SPREADSHEET = client.open_by_key(
 )
 
 # ================= UTIL =================
-@st.cache_data(ttl=300)
+# @st.cache_data(ttl=300)
 def load_sheet(sheet_name):
     sh = SPREADSHEET.worksheet(
     sheet_name
@@ -862,7 +862,7 @@ if selected_product == "BIKE Line":
                     st.success(
                         f"{len(selected_units)} unit(s) updated."
                     )
-
+                    st.cache_data.clear()
                     st.rerun()
 
     with logistics_tab:
@@ -968,7 +968,7 @@ if selected_product == "BIKE Line":
                 st.success(
                     f"{len(selected_units)} unit(s) shipped."
                 )
-
+                st.cache_data.clear()
                 st.rerun()
 
 else:
