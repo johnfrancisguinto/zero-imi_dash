@@ -762,7 +762,8 @@ if selected_product == "BIKE Line":
 
         available_pdi = latest[
             (latest["station"] == "FQC")
-            & (latest["results"] == "PASS")
+            &
+            (latest["results"] == "PASS")
         ]
 
         if available_pdi.empty:
@@ -780,70 +781,60 @@ if selected_product == "BIKE Line":
                 .worksheet("Bike_line")
             )
 
-            st.markdown("### Batch PDI")
-
             selected_units = st.multiselect(
-                "Select Units",
-                available_pdi["serial_number"].tolist(),default=[]
+                "Select Units Ready for PDI",
+                available_pdi[
+                    "serial_number"
+                ].tolist(),
+                default=[]
             )
 
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.metric(
+                    "Available",
+                    len(available_pdi)
+                )
+
+            with col2:
+                st.metric(
+                    "Selected",
+                    len(selected_units)
+                )
+
             if st.button(
-                "✅ Mark Selected as PDI PASS"
+                f"✅ Submit {len(selected_units)} PDI Unit(s)",
+                use_container_width=True,
+                key="submit_pdi"
             ):
 
-                now = datetime.now().strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
+                if not selected_units:
 
-                for vin in selected_units:
-
-                    bike_sheet.append_row([
-                        now,
-                        "PDI",
-                        vin,
-                        "PASS"
-                    ])
-
-                st.success(
-                    f"{len(selected_units)} unit(s) updated."
-                )
-
-                st.rerun()
-
-            st.divider()
-
-            st.markdown("### Individual PDI")
-
-            for _, row in available_pdi.iterrows():
-
-                col1, col2 = st.columns([4,1])
-
-                with col1:
-                    st.write(
-                        row["serial_number"]
+                    st.warning(
+                        "Select at least one unit."
                     )
 
-                with col2:
+                else:
 
-                    if st.button(
-                        "✅",
-                        key=f"pdi_{row['serial_number']}"
-                    ):
+                    now = datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+
+                    for vin in selected_units:
 
                         bike_sheet.append_row([
-                            datetime.now().strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            ),
-                            row["serial_number"],
+                            now,
                             "PDI",
+                            vin,
                             "PASS"
                         ])
 
-                        st.success(
-                            f"{row['serial_number']} updated."
-                        )
+                    st.success(
+                        f"{len(selected_units)} unit(s) updated."
+                    )
 
-                        st.rerun()
+                    st.rerun()
 
     with logistics_tab:
 
@@ -851,14 +842,17 @@ if selected_product == "BIKE Line":
 
         bike_df = load_sheet("Bike_line")
 
-        latest, _ = process_df(bike_df)
+        latest, _ = process_df(
+            bike_df
+        )
 
         available_shipment = latest[
             (latest["station"] == "PDI")
-            & (latest["results"] == "PASS")
+            &
+            (latest["results"] == "PASS")
         ]
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
             st.metric(
@@ -868,12 +862,38 @@ if selected_product == "BIKE Line":
 
         with col2:
             st.metric(
+                "Selected",
+                0
+            )
+
+        with col3:
+            st.metric(
                 "Shipped Units",
                 len(
                     latest[
                         latest["station"] == "Shipped"
                     ]
                 )
+            )
+
+        shipment_id = st.text_input(
+            "Shipment ID"
+        )
+
+        selected_units = st.multiselect(
+            "Units to Ship",
+            available_shipment[
+                "serial_number"
+            ].tolist(),
+            default=[]
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric(
+                "Selected Units",
+                len(selected_units)
             )
 
         bike_sheet = (
@@ -890,27 +910,10 @@ if selected_product == "BIKE Line":
             .worksheet("Shipments")
         )
 
-        st.divider()
-
-        # ===============================
-        # BATCH SHIPMENT
-        # ===============================
-
-        st.markdown("### Batch Shipment")
-
-        shipment_id = st.text_input(
-            "Shipment ID"
-        )
-
-        selected_units = st.multiselect(
-            "Units to Ship",
-            available_shipment[
-                "serial_number"
-            ].tolist(),default=[]
-        )
-
         if st.button(
-            "🚚 Mark Selected as Shipped"
+            f"🚚 Ship {len(selected_units)} Unit(s)",
+            use_container_width=True,
+            key="ship_units"
         ):
 
             if not shipment_id:
@@ -922,7 +925,7 @@ if selected_product == "BIKE Line":
             elif not selected_units:
 
                 st.error(
-                    "Select units"
+                    "Select at least one unit."
                 )
 
             else:
@@ -935,8 +938,8 @@ if selected_product == "BIKE Line":
 
                     bike_sheet.append_row([
                         now,
-                        vin,
                         "Shipped",
+                        vin,
                         "PASS"
                     ])
 
@@ -951,53 +954,6 @@ if selected_product == "BIKE Line":
                 )
 
                 st.rerun()
-
-        st.divider()
-
-        # ===============================
-        # INDIVIDUAL SHIPMENT
-        # ===============================
-
-        st.markdown("### Individual Shipment")
-
-        for _, row in available_shipment.iterrows():
-
-            col1, col2 = st.columns([4, 1])
-
-            with col1:
-                st.write(
-                    row["serial_number"]
-                )
-
-            with col2:
-
-                if st.button(
-                    "🚚",
-                    key=f"ship_{row['serial_number']}"
-                ):
-
-                    now = datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
-
-                    bike_sheet.append_row([
-                        now,
-                        row["serial_number"],
-                        "Shipped",
-                        "PASS"
-                    ])
-
-                    ship_sheet.append_row([
-                        now,
-                        "MANUAL",
-                        row["serial_number"]
-                    ])
-
-                    st.success(
-                        f"{row['serial_number']} shipped."
-                    )
-
-                    st.rerun()
 else:
 
     render_dashboard(df, selected_product)
