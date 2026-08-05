@@ -114,21 +114,34 @@ div[data-baseweb="select"]{
 st.markdown("""
 <style>
 
-/* Product selector buttons */
+/* Product selector cards */
+
 div[data-testid="stButton"] > button {
-    background:#111;
-    color:#C1E9E2;
-    border:3px solid #949494;
-    border-radius:12px;
-    min-height:90px;
-    font-size:18px;
-    font-weight:bold;
-    white-space:pre-line;
+
+    background:#111 !important;
+
+    border:3px solid #949494 !important;
+
+    border-radius:12px !important;
+
+    min-height:95px !important;
+
+    font-size:22px !important;
+
+    font-weight:bold !important;
+
+    color:#C1E9E2 !important;
+
+    white-space:pre-line !important;
+
 }
 
 div[data-testid="stButton"] > button:hover {
-    border:3px solid #00ff00;
-    color:#00ff00;
+
+    border:3px solid #00FF00 !important;
+
+    color:#00FF00 !important;
+
 }
 
 </style>
@@ -237,10 +250,16 @@ creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
+SPREADSHEET = client.open_by_key(
+    SPREADSHEET_ID
+)
 
 # ================= UTIL =================
+@st.cache_data(ttl=300)
 def load_sheet(sheet_name):
-    sh = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
+    sh = SPREADSHEET.worksheet(
+    sheet_name
+)
     df = pd.DataFrame(sh.get_all_records())
 
     if df.empty:
@@ -744,7 +763,13 @@ st.divider()
 # ================= BIKE LINE =================
 
 if selected_product == "BIKE Line":
+    bike_sheet = SPREADSHEET.worksheet(
+        "Bike_line"
+    )
 
+    ship_sheet = SPREADSHEET.worksheet(
+        "Shipments"
+    )
     dashboard_tab, pdi_tab, logistics_tab = st.tabs([
         "📊 Dashboard",
         "📝 PDI Entry",
@@ -774,12 +799,6 @@ if selected_product == "BIKE Line":
 
         else:
 
-            bike_sheet = (
-                client.open_by_key(
-                    SPREADSHEET_ID
-                )
-                .worksheet("Bike_line")
-            )
 
             pdi_table = pd.DataFrame({
                 "Select": False,
@@ -850,7 +869,7 @@ if selected_product == "BIKE Line":
 
         st.subheader("🚚 Bike Logistics")
 
-        bike_df = load_sheet("Bike_line")
+        bike_df = df
 
         latest, _ = process_df(
             bike_df
@@ -907,19 +926,6 @@ if selected_product == "BIKE Line":
                 )
             )
 
-        bike_sheet = (
-            client.open_by_key(
-                SPREADSHEET_ID
-            )
-            .worksheet("Bike_line")
-        )
-
-        ship_sheet = (
-            client.open_by_key(
-                SPREADSHEET_ID
-            )
-            .worksheet("Shipments")
-        )
         if st.button(
             f"🚚 Ship {len(selected_units)} Unit(s)",
             use_container_width=True,
@@ -963,7 +969,7 @@ if selected_product == "BIKE Line":
                     f"{len(selected_units)} unit(s) shipped."
                 )
 
-        st.rerun()
+                st.rerun()
 
 else:
 
