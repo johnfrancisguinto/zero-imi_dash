@@ -112,6 +112,29 @@ div[data-baseweb="select"]{
 """, unsafe_allow_html=True)
 
 st.markdown("""
+<style>
+
+/* Product selector buttons */
+div[data-testid="stButton"] button[kind="secondary"] {
+    background:#111;
+    color:#C1E9E2;
+    border:3px solid #949494;
+    border-radius:12px;
+    min-height:90px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* Hover */
+div[data-testid="stButton"] button[kind="secondary"]:hover {
+    border:3px solid #00AEEF;
+    color:#00AEEF;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
 <div style="
 display:flex;
 align-items:center;
@@ -527,7 +550,6 @@ def render_dashboard(df, title):
     return total
 
 # ================= GLOBAL SUMMARY =================
-# ================= GLOBAL SUMMARY =================
 
 product_totals = {}
 
@@ -558,9 +580,9 @@ total_all = sum(product_totals.values())
 if "selected_product" not in st.session_state:
     st.session_state.selected_product = "BIKE Line"
 
-col1, col2, col3, col4 = st.columns(4)
-
 selected = st.session_state.selected_product
+
+col1, col2, col3, col4 = st.columns(4)
 
 # ================= ALL PRODUCTS =================
 
@@ -592,7 +614,11 @@ with col1:
 
 with col2:
 
-    bike_border = "#00ff00" if selected == "BIKE Line" else "#949494"
+    bike_border = (
+        "#00FF00"
+        if selected == "BIKE Line"
+        else "#949494"
+    )
 
     st.markdown(f"""
     <div style="
@@ -601,6 +627,7 @@ with col2:
         border-radius:12px;
         text-align:center;
         border:3px solid {bike_border};
+        margin-bottom:5px;
     ">
         <div style="font-size:18px;color:#C1E9E2;">
             🛵 BIKE Line
@@ -616,8 +643,8 @@ with col2:
     """, unsafe_allow_html=True)
 
     if st.button(
-        "Select Bike",
-        key="bike_select",
+        "",
+        key="bike_line",
         use_container_width=True
     ):
         st.session_state.selected_product = "BIKE Line"
@@ -628,7 +655,11 @@ with col2:
 
 with col3:
 
-    bcb_border = "#00ff00" if selected == "BCB Line" else "#949494"
+    bcb_border = (
+        "#00FF00"
+        if selected == "BCB Line"
+        else "#949494"
+    )
 
     st.markdown(f"""
     <div style="
@@ -637,6 +668,7 @@ with col3:
         border-radius:12px;
         text-align:center;
         border:3px solid {bcb_border};
+        margin-bottom:5px;
     ">
         <div style="font-size:18px;color:#C1E9E2;">
             🔋 BCB Line
@@ -652,8 +684,8 @@ with col3:
     """, unsafe_allow_html=True)
 
     if st.button(
-        "Select BCB",
-        key="bcb_select",
+        "",
+        key="bcb_line",
         use_container_width=True
     ):
         st.session_state.selected_product = "BCB Line"
@@ -664,7 +696,11 @@ with col3:
 
 with col4:
 
-    cii_border = "#00ff00" if selected == "CII Line" else "#949494"
+    cii_border = (
+        "#00FF00"
+        if selected == "CII Line"
+        else "#949494"
+    )
 
     st.markdown(f"""
     <div style="
@@ -673,6 +709,7 @@ with col4:
         border-radius:12px;
         text-align:center;
         border:3px solid {cii_border};
+        margin-bottom:5px;
     ">
         <div style="font-size:18px;color:#C1E9E2;">
             ⚙️ CII Line
@@ -688,8 +725,8 @@ with col4:
     """, unsafe_allow_html=True)
 
     if st.button(
-        "Select CII",
-        key="cii_select",
+        "",
+        key="cii_line",
         use_container_width=True
     ):
         st.session_state.selected_product = "CII Line"
@@ -747,7 +784,7 @@ if selected_product == "BIKE Line":
 
             selected_units = st.multiselect(
                 "Select Units",
-                available_pdi["serial_number"].tolist()
+                available_pdi["serial_number"].tolist(),default=[]
             )
 
             if st.button(
@@ -869,7 +906,7 @@ if selected_product == "BIKE Line":
             "Units to Ship",
             available_shipment[
                 "serial_number"
-            ].tolist()
+            ].tolist(),default=[]
         )
 
         if st.button(
