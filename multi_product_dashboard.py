@@ -589,6 +589,7 @@ for i, (name, val) in enumerate(product_totals.items()):
 
 # ================= TABS =================
 tab_names = list(PRODUCT_SHEETS.keys()) + [
+    "📝 PDI Entry",
     "🚚 Bike Logistics"
 ]
 
@@ -604,6 +605,51 @@ for tab, (name, sheet_name) in zip(
         render_dashboard(df, name)
 
     with tabs[-1]:
+
+        st.subheader("📝 PDI Entry")
+
+        vin = st.text_input(
+            "VIN / Serial Number"
+        )
+
+        result = st.selectbox(
+            "PDI Result",
+            ["PASS", "FAIL"]
+        )
+
+        if st.button("Submit PDI"):
+
+            if not vin:
+
+                st.error(
+                    "Enter VIN"
+                )
+
+            else:
+
+                bike_sheet = (
+                    client.open_by_key(
+                        SPREADSHEET_ID
+                    )
+                    .worksheet("Bike_line")
+                )
+
+                bike_sheet.append_row([
+                    datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    vin.strip(),
+                    "PDI",
+                    result
+                ])
+
+                st.success(
+                    f"{vin} recorded at PDI"
+                )
+
+                st.rerun()
+
+    with tabs[-2]:
 
         st.subheader("🚚 Bike Logistics")
 
