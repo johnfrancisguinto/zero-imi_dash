@@ -531,49 +531,32 @@ def render_dashboard(df, title):
         with right_col:
 
             st.markdown("### 📊 Pass / Fail")
-
             pf_station = (
                 view_df
-                .groupby(
-                    ["station", "results"]
-                )
+                .groupby(["station", "results"])
                 .size()
                 .unstack(fill_value=0)
             )
 
-            cols = st.columns(
-                len(station_order)
-            )
+            cols = st.columns(len(station_order))
 
-            for i, station in enumerate(
-                station_order
-            ):
+            for i, station in enumerate(station_order):
 
-                with colsif station in pf_station.index:
+                with cols[i]:
 
-                        row = pf_station.loc[
-                            station
-                        ]
+                    if station in pf_station.index:
 
-                        pass_count = row.get(
-                            "PASS",
-                            0
-                        )
+                        row = pf_station.loc[station]
 
-                        fail_count = row.get(
-                            "FAIL",
-                            0
-                        )
+                        pass_count = row.get("PASS", 0)
+                        fail_count = row.get("FAIL", 0)
 
                     else:
 
                         pass_count = 0
                         fail_count = 0
 
-                    total = (
-                        pass_count +
-                        fail_count
-                    )
+                    total = pass_count + fail_count
 
                     pass_rate = (
                         pass_count / total * 100
