@@ -336,6 +336,7 @@ def get_production_counts(df):
     )
 
     return daily_count, weekly_count
+
 def render_dashboard(df, title):
 
     if df.empty:
@@ -357,34 +358,25 @@ def render_dashboard(df, title):
     # ==================================================
 
     if title == "BIKE Line":
+        st.subheader("🏷️ SKU on Line")
 
-        st.subheader("🏷️ SKU On Line")
-
-        sku_source = latest.copy()
-
-        if "sku_number" not in sku_source.columns:
-            sku_source["sku_number"] = ""
-
-        sku_table = (
-            sku_source
-            .groupby(["sku_number", "sku"])
+        sku_counts = (
+            latest.groupby("sku")
             .size()
             .reset_index(name="count")
             .sort_values("count", ascending=False)
         )
 
-        sku_table.columns = [
-            "SKU Number",
-            "Model",
-            "Count"
-        ]
+        sku_cols = st.columns(2)
 
-        st.dataframe(
-            sku_table,
-            hide_index=True,
-            use_container_width=True,
-            height=180
-        )
+        for i, row in enumerate(sku_counts.itertuples()):
+
+            with sku_cols[i % 2]:
+
+                st.metric(
+                    label=row.sku,
+                    value=row.count
+                )
 
     # ==================================================
     # OVERALL / DAILY / WEEKLY
@@ -482,7 +474,7 @@ def render_dashboard(df, title):
                                 "PREL"
                             ]:
 
-                                display = (
+                                display_text = (
                                     f"{vin} - {sku_num}"
                                     if sku_num
                                     else vin
@@ -490,7 +482,7 @@ def render_dashboard(df, title):
 
                             elif station == "FQC":
 
-                                display = (
+                                display_text = (
                                     f"{vin} - {bcb_num}"
                                     if bcb_num
                                     else vin
@@ -498,7 +490,7 @@ def render_dashboard(df, title):
 
                             else:
 
-                                display = vin
+                                display_text = vin
 
                             result = str(
                                 row["results"]
@@ -522,7 +514,7 @@ def render_dashboard(df, title):
                                     font-size:12px;
                                     font-weight:bold;
                                 ">
-                                    {display}
+                                    {display_text}
                                 </span>
                                 """
                             )
@@ -538,16 +530,13 @@ def render_dashboard(df, title):
 
         with right_col:
 
-            st.markdown(
-                "### 📊 Pass / Fail"
-            )
+            st.markdown("### 📊 Pass / Fail")
 
             pf_station = (
                 view_df
-                .groupby([
-                    "station",
-                    "results"
-                ])
+                .groupby(
+                    ["station", "results"]
+                )
                 .size()
                 .unstack(fill_value=0)
             )
@@ -560,72 +549,70 @@ def render_dashboard(df, title):
                 station_order
             ):
 
-                for i, station in enumerate(station_order):
+                with colsif station in pf_station.index:
 
-                    with cols[i]:
+                        row = pf_station.loc[
+                            station
+                        ]
 
-                        if station.index:
-
-                            row = pf_station.loc[station]
-
-                            pass_count = row.get(
-                                "PASS",
-                                0
-                            )
-
-                            fail_count = row.get(
-                                "FAIL",
-                                0
-                            )
-
-                        else:
-
-                            pass_count = 0
-                            fail_count = 0
-
-                        total = (
-                            pass_count +
-                            fail_count
+                        pass_count = row.get(
+                            "PASS",
+                            0
                         )
 
-                        pass_rate = (
-                            pass_count / total * 100
-                            if total > 0
-                            else 0
+                        fail_count = row.get(
+                            "FAIL",
+                            0
                         )
 
-                        if pass_rate >= 95:
-                            rate_color = "#00ff00"
-                        elif pass_rate >= 85:
-                            rate_color = "#ffaa00"
-                        else:
-                            rate_color = "#ff3333"
+                    else:
 
-                        st.markdown(
-                            f"""
-                            <div class='card'>
-                                <div style='font-size:15px;'>
-                                    {station}
-                                </div>
+                        pass_count = 0
+                        fail_count = 0
 
-                                <div style='color:#00ff00;'>
-                                    PASS: {pass_count}
-                                    <span style='color:#ff3333;'>
-                                        FAIL: {fail_count}
-                                    </span>
-                                </div>
+                    total = (
+                        pass_count +
+                        fail_count
+                    )
 
-                                <div style='margin-top:10px;font-size:16px;'>
-                                    PASS RATE:
-                                    <span style='color:{rate_color};'>
-                                        {pass_rate:.1f}%
-                                    </span>
-                                </div>
+                    pass_rate = (
+                        pass_count / total * 100
+                        if total > 0
+                        else 0
+                    )
+
+                    if pass_rate >= 95:
+                        rate_color = "#00ff00"
+                    elif pass_rate >= 85:
+                        rate_color = "#ffaa00"
+                    else:
+                        rate_color = "#ff3333"
+
+                    st.markdown(
+                        f"""
+                        <div class='card'>
+                            <div style='font-size:15px;'>
+                                {station}
                             </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
 
+                            <div style='color:#00ff00;'>
+                                PASS: {pass_count}
+                                <span style='color:#ff3333;'>
+                                    FAIL: {fail_count}
+                                </span>
+                            </div>
+
+                            <div style='margin-top:10px;font-size:16px;'>
+                                PASS RATE:
+                                <span style='color:{rate_color};'>
+                                    {pass_rate:.1f}%
+                                </span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+            
     # ==================================================
     # OVERALL / DAILY / WEEKLY CONTENT
     # ==================================================
