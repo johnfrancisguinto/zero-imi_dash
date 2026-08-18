@@ -560,71 +560,71 @@ def render_dashboard(df, title):
                 station_order
             ):
 
-                with colsif station in pf_station.index:
+                for i, station in enumerate(station_order):
 
-                        row = pf_station.loc[
-                            station
-                        ]
+                    with cols[i]:
 
-                        pass_count = row.get(
-                            "PASS",
-                            0
+                        if station.index:
+
+                            row = pf_station.loc[station]
+
+                            pass_count = row.get(
+                                "PASS",
+                                0
+                            )
+
+                            fail_count = row.get(
+                                "FAIL",
+                                0
+                            )
+
+                        else:
+
+                            pass_count = 0
+                            fail_count = 0
+
+                        total = (
+                            pass_count +
+                            fail_count
                         )
 
-                        fail_count = row.get(
-                            "FAIL",
-                            0
+                        pass_rate = (
+                            pass_count / total * 100
+                            if total > 0
+                            else 0
                         )
 
-                    else:
+                        if pass_rate >= 95:
+                            rate_color = "#00ff00"
+                        elif pass_rate >= 85:
+                            rate_color = "#ffaa00"
+                        else:
+                            rate_color = "#ff3333"
 
-                        pass_count = 0
-                        fail_count = 0
+                        st.markdown(
+                            f"""
+                            <div class='card'>
+                                <div style='font-size:15px;'>
+                                    {station}
+                                </div>
 
-                    total = (
-                        pass_count
-                        + fail_count
-                    )
+                                <div style='color:#00ff00;'>
+                                    PASS: {pass_count}
+                                    <span style='color:#ff3333;'>
+                                        FAIL: {fail_count}
+                                    </span>
+                                </div>
 
-                    pass_rate = (
-                        pass_count
-                        / total
-                        * 100
-                        if total > 0
-                        else 0
-                    )
-
-                    if pass_rate >= 95:
-                        rate_color = "#00ff00"
-                    elif pass_rate >= 85:
-                        rate_color = "#ffaa00"
-                    else:
-                        rate_color = "#ff3333"
-
-                    st.markdown(
-                        f"""
-                        <div class='card'>
-                            <div style='font-size:15px;'>
-                                {station}
+                                <div style='margin-top:10px;font-size:16px;'>
+                                    PASS RATE:
+                                    <span style='color:{rate_color};'>
+                                        {pass_rate:.1f}%
+                                    </span>
+                                </div>
                             </div>
-
-                            <div style='color:#00ff00;'>
-                                PASS: {pass_count}
-                                <span style='color:#ff3333;'>
-                                    FAIL: {fail_count}
-                                </span>
-                            </div>
-
-                            <div style='margin-top:10px;font-size:16px;'>
-                                PASS RATE:
-                                <span style='color:{rate_color};'>
-                                    {pass_rate:.1f}%
-                                </span>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
 
     # ==================================================
     # OVERALL / DAILY / WEEKLY CONTENT
