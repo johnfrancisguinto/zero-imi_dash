@@ -368,11 +368,12 @@ def render_dashboard(df, title):
         df["datetime"].dt.date >= last_sunday
     ].copy()
 
-    overall_tab, daily_tab, weekly_tab = st.tabs([
-        "📊 Overall",
+    daily_tab, weekly_tab, overall_tab = st.tabs([
         "📅 Daily",
-        "📈 Weekly"
+        "📈 Weekly",
+        "📊 Overall"
     ])
+
 
     # counts_full = {pc: counts.get(pc, 0) for pc in station_order}
 
@@ -419,28 +420,17 @@ def render_dashboard(df, title):
 
                         for _, row in station_df.iterrows():
 
-                            vin = str(
-                                row["serial_number"]
-                            )
+                            vin = str(row["serial_number"])
 
                             sku_num = str(
-                                row.get(
-                                    "sku_number",
-                                    ""
-                                )
+                                row.get("sku_number", "")
                             ).strip()
 
                             bcb_num = str(
-                                row.get(
-                                    "bcb_part_number",
-                                    ""
-                                )
+                                row.get("bcb_part_number", "")
                             ).strip()
 
-                            if pc in [
-                                "MBB Config",
-                                "PREL"
-                            ]:
+                            if pc in ["MBB Config", "PREL"]:
 
                                 display_text = (
                                     f"{vin} - {sku_num}"
@@ -515,7 +505,7 @@ def render_dashboard(df, title):
 
                 with cols[i]:
 
-                    if station in pf_station:
+                    if station in pf_station.index:
                         row = pf_station.loc[station]
 
                         pass_count = row.get("PASS", 0)
@@ -542,128 +532,122 @@ def render_dashboard(df, title):
 
                     else:
                         rate_color = "#ff3333"
-
-                    st.markdown(
-                        f"""
-                        <div class='card'>
-                            <div style='font-size:15px;'>
-                                {station}
-                            </div>
-
-                            <div style='color:#00ff00;'>
-                                PASS: {pass_count}
-                                <span style='color:#ff3333;'>
-                                    FAIL: {fail_count}
-                                </span>
-                            </div>
-
-                            <div style='margin-top:10px;font-size:16px;'>
-                                PASS RATE:
-                                <span style='color:{rate_color};'>
-                                    {pass_rate:.1f}%
-                                </span>
-                            </div>
+                    
+                    st.markdown(f"""
+                    <div class='card'>
+                        <div style='font-size:15px;'>{station}</div>
+                        <div style='color:#00ff00;'>PASS: {pass_count}  <span style='color:#ff3333;'>FAIL: {fail_count}</span></div>
+                        <div style='margin-top:10px;font-size:16px;'>
+                            PASS RATE: <span style='color:{rate_color};'>{pass_rate:.1f}%</span>
                         </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    </div>
+                    """, unsafe_allow_html=True)
 
-    left_col, right_col = st.columns([1, 2])
 
-    with left_col:
+    if title == "BIKE Line":
 
-        if title == "BIKE Line":
+        latest = latest[
+            latest["station"] != "Shipped"
+        ]
+        st.subheader("🏷️ SKU on Line")
+        sku_counts = (
+            latest[
+                latest["sku_number"].astype(str).str.strip() != ""
+            ]
+            .groupby(["sku_number", "sku"])
+            .size()
+            .reset_index(name="count")
+            .sort_values("count", ascending=False)
+        )
 
-            latest = latest[
-                latest["station"] != "Shipped"
-    ]
-            st.subheader("🏷️ SKU on Line")
-            sku_counts = (
-                df[
-                    df["sku_number"].astype(str).str.strip() != ""
-                ]
-                .groupby(["sku_number", "sku"])
-                .size()
-                .reset_index(name="count")
-                .sort_values("count", ascending=False)
-            )
+        sku_cols = st.columns(2)
 
-            sku_cols = st.columns(2)
+        for i, row in enumerate(sku_counts.itertuples()):
 
-            for i, row in enumerate(sku_counts.itertuples()):
+            with sku_cols[i % 2]:
 
-                with sku_cols[i % 2]:
-
-                    st.metric(
-                        label=f"{row.sku_number} | {row.sku}",
-                        value=row.count
-                    )
-                
-        with overall_tab:
-            render_units_and_pf(df)
-
-        with daily_tab:
-            render_units_and_pf(daily_df)
-
-        with weekly_tab:
-            render_units_and_pf(weekly_df)
-
-    with right_col:
+                st.metric(
+                    label=f"{row.sku_number} | {row.sku}",
+                    value=row.count
+                )
         
-        kpi1, kpi2 = st.columns(2)
-    
-        with kpi1:
-            st.markdown(f"""
-            <div class='card'>
-                <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
-                <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
-                    {daily_count}
-                </div>
+    with daily_tab:
+
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
+                {daily_count}
             </div>
-            """, unsafe_allow_html=True)
-    
-        with kpi2:
-            st.markdown(f"""
-            <div class='card'>
-                <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
-                <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
-                    {weekly_count}
-                </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.divider()
+
+        render_units_and_pf(daily_df)
+
+    with weekly_tab:
+
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
+                {weekly_count}
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
+        st.divider()
 
-        st.markdown("### 🧭 WIP Trace")
+        render_units_and_pf(weekly_df)
 
-        serial = st.selectbox(
-            "VIN",
-            df["serial_number"].unique()
-        )
+    with overall_tab:
 
-        trace = (
-            df[df["serial_number"] == serial]
-            .sort_values("datetime")
-        )
-        
-        def color_result(val):
-            color = "#00ff00" if val=="PASS" else "#ff3333"
-            return f"color:{color}; font-weight:bold"
-        
-        st.dataframe(
-            trace[
-                [
-                    "datetime",
-                    "station",
-                    "serial_number",
-                    "results"
-                ]
-            ].style.map(
-                color_result,
-                subset=["results"]
-            ),
-            use_container_width=True,
-            hide_index=True,
-            height=280
-        )
+        overall_count = len(latest)
+
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📦 TOTAL WIP</div>
+            <div style='font-size:26px;font-weight:bold;color:#00FF00;'>
+                {overall_count}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.divider()
+
+        render_units_and_pf(df)
+
+
+    st.markdown("### 🧭 WIP Trace")
+
+    serial = st.selectbox(
+        "VIN",
+        df["serial_number"].unique()
+    )
+
+    trace = (
+        df[df["serial_number"] == serial]
+        .sort_values("datetime")
+    )
+    
+    def color_result(val):
+        color = "#00ff00" if val=="PASS" else "#ff3333"
+        return f"color:{color}; font-weight:bold"
+    
+    st.dataframe(
+        trace[
+            [
+                "datetime",
+                "station",
+                "serial_number",
+                "results"
+            ]
+        ].style.map(
+            color_result,
+            subset=["results"]
+        ),
+        use_container_width=True,
+        hide_index=True,
+        height=280
+    )
 
 
     # Alerts
@@ -700,7 +684,7 @@ def render_dashboard(df, title):
                 height=200
             )
 
-    return total
+    return len(latest)
 
 # ================= GLOBAL SUMMARY =================
 
