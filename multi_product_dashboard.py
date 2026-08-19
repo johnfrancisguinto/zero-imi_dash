@@ -369,9 +369,9 @@ def render_dashboard(df, title):
     ].copy()
 
     daily_tab, weekly_tab, overall_tab = st.tabs([
-        "📅 Daily",
-        "📈 Weekly",
-        "📊 Overall"
+        f"📅 Daily {daily_count}",
+        f"📈 Weekly {weekly_count}",
+        f"📊 Overall"
     ])
 
 
@@ -391,6 +391,28 @@ def render_dashboard(df, title):
             latest_view = latest_view[
                 latest_view["station"] != "Shipped"
             ]
+
+            st.subheader("🏷️ SKU on Line")
+            sku_counts = (
+                latest[
+                    latest["sku_number"].astype(str).str.strip() != ""
+                ]
+                .groupby(["sku_number", "sku"])
+                .size()
+                .reset_index(name="count")
+                .sort_values("count", ascending=False)
+            )
+
+            sku_cols = st.columns(2)
+
+            for i, row in enumerate(sku_counts.itertuples()):
+
+                with sku_cols[i % 2]:
+
+                    st.metric(
+                        label=f"{row.sku_number} | {row.sku}",
+                        value=row.count
+                    )
 
         left_col, right_col = st.columns([1, 1])
 
@@ -543,76 +565,14 @@ def render_dashboard(df, title):
                     </div>
                     """, unsafe_allow_html=True)
 
-
-    if title == "BIKE Line":
-
-        latest = latest[
-            latest["station"] != "Shipped"
-        ]
-        st.subheader("🏷️ SKU on Line")
-        sku_counts = (
-            latest[
-                latest["sku_number"].astype(str).str.strip() != ""
-            ]
-            .groupby(["sku_number", "sku"])
-            .size()
-            .reset_index(name="count")
-            .sort_values("count", ascending=False)
-        )
-
-        sku_cols = st.columns(2)
-
-        for i, row in enumerate(sku_counts.itertuples()):
-
-            with sku_cols[i % 2]:
-
-                st.metric(
-                    label=f"{row.sku_number} | {row.sku}",
-                    value=row.count
-                )
         
     with daily_tab:
-
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
-            <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
-                {daily_count}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.divider()
-
         render_units_and_pf(daily_df)
 
     with weekly_tab:
-
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
-            <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
-                {weekly_count}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.divider()
-
         render_units_and_pf(weekly_df)
 
     with overall_tab:
-
-        overall_count = len(latest)
-
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size:14px;'>📦 TOTAL WIP</div>
-            <div style='font-size:26px;font-weight:bold;color:#00FF00;'>
-                {overall_count}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.divider()
-
         render_units_and_pf(df)
 
 
