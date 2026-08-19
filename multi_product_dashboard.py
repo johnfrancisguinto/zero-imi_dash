@@ -266,7 +266,6 @@ def load_sheet(sheet_name):
         return df
 
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
-    st.write(df.columns.tolist())
     df = df.map(lambda x: str(x).strip())
     df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
     df = df.sort_values("datetime", ascending=False)
@@ -350,6 +349,30 @@ def render_dashboard(df, title):
     daily_count, weekly_count = get_production_counts(df)
 
     station_order = get_station_order(df)
+    today = datetime.now().date()
+
+    daily_df = df[
+        df["datetime"].dt.date == today
+    ].copy()
+
+    days_since_sunday = (
+        datetime.now().weekday() + 1
+    ) % 7
+
+    last_sunday = (
+        datetime.now().date() -
+        pd.Timedelta(days=days_since_sunday)
+    )
+
+    weekly_df = df[
+        df["datetime"].dt.date >= last_sunday
+    ].copy()
+
+    overall_tab, daily_tab, weekly_tab = st.tabs([
+        "📊 Overall",
+        "📅 Daily",
+        "📈 Weekly"
+    ])
 
     # counts_full = {pc: counts.get(pc, 0) for pc in station_order}
 
@@ -357,6 +380,193 @@ def render_dashboard(df, title):
     # for i, pc in enumerate(station_order):
     #     with cols[i]:
     #         st.metric(pc, counts_full[pc])
+
+    def render_units_and_pf(view_df):
+
+        latest_view, _ = process_df(view_df)
+
+        if title == "BIKE Line":
+
+            latest_view = latest_view[
+                latest_view["station"] != "Shipped"
+            ]
+
+        left_col, right_col = st.columns([1, 1])
+
+        # ================= UNITS =================
+
+        with left_col:
+
+            st.markdown("### 🛵 Units")
+
+            for pc in station_order:
+
+                station_df = latest_view[
+                    latest_view["station"] == pc
+                ]
+
+                with st.expander(
+                    f"{pc} ({len(station_df)})"
+                ):
+
+                    if station_df.empty:
+
+                        st.write("No units")
+
+                    else:
+
+                        badges = []
+
+                        for _, row in station_df.iterrows():
+
+                            vin = str(
+                                row["serial_number"]
+                            )
+
+                            sku_num = str(
+                                row.get(
+                                    "sku_number",
+                                    ""
+                                )
+                            ).strip()
+
+                            bcb_num = str(
+                                row.get(
+                                    "bcb_part_number",
+                                    ""
+                                )
+                            ).strip()
+
+                            if pc in [
+                                "MBB Config",
+                                "PREL"
+                            ]:
+
+                                display_text = (
+                                    f"{vin} - {sku_num}"
+                                    if sku_num
+                                    else vin
+                                )
+
+                            elif pc == "FQC":
+
+                                display_text = (
+                                    f"{vin} - {bcb_num}"
+                                    if bcb_num
+                                    else vin
+                                )
+
+                            else:
+
+                                display_text = vin
+
+                            result = str(
+                                row["results"]
+                            ).upper()
+
+                            bg = (
+                                "#00AA00"
+                                if result == "PASS"
+                                else "#CC0000"
+                            )
+
+                            badges.append(
+                                f"""
+                                <span style="
+                                    background:{bg};
+                                    color:white;
+                                    padding:3px 8px;
+                                    border-radius:8px;
+                                    margin:2px;
+                                    display:inline-block;
+                                    font-size:12px;
+                                    font-weight:bold;
+                                ">
+                                    {display_text}
+                                </span>
+                                """
+                            )
+
+                        st.markdown(
+                            "".join(badges),
+                            unsafe_allow_html=True
+                        )
+
+        # ================= PASS FAIL =================
+
+        with right_col:
+
+            st.markdown(
+                "### 📊 Pass / Fail"
+            )
+
+            pf_station = (
+                view_df
+                .groupby(
+                    ["station", "results"]
+                )
+                .size()
+                .unstack(fill_value=0)
+            )
+
+            cols = st.columns(len(station_order))
+
+            for i, station in enumerate(station_order):
+
+                with cols[i]:
+
+                    if station in pf_station:
+                        row = pf_station.loc[station]
+
+                        pass_count = row.get("PASS", 0)
+                        fail_count = row.get("FAIL", 0)
+
+                    else:
+
+                        pass_count = 0
+                        fail_count = 0
+
+                    total = pass_count + fail_count
+
+                    pass_rate = (
+                        pass_count / total * 100
+                        if total > 0
+                        else 0
+                    )
+
+                    if pass_rate >= 95:
+                        rate_color = "#00ff00"
+
+                    elif pass_rate >= 85:
+                        rate_color = "#ffaa00"
+
+                    else:
+                        rate_color = "#ff3333"
+
+                    st.markdown(
+                        f"""
+                        <div class='card'>
+                            <div style='font-size:15px;'>
+                                {station}
+                            </div>
+
+                            <div style='color:#00ff00;'>
+                                PASS: {pass_count}
+                                <span style='color:#ff3333;'>
+                                    FAIL: {fail_count}
+                                </span>
+                            </div>
+
+                            <div style='margin-top:10px;font-size:16px;'>
+                                PASS RATE:
+                                <span style='color:{rate_color};'>
+                                    {pass_rate:.1f}%
+                                </span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
     left_col, right_col = st.columns([1, 2])
 
@@ -368,10 +578,9 @@ def render_dashboard(df, title):
                 latest["station"] != "Shipped"
     ]
             st.subheader("🏷️ SKU on Line")
-
             sku_counts = (
-                latest[
-                    latest["sku_number"].astype(str).str.strip() != ""
+                df[
+                    df["sku_number"].astype(str).str.strip() != ""
                 ]
                 .groupby(["sku_number", "sku"])
                 .size()
@@ -386,61 +595,18 @@ def render_dashboard(df, title):
                 with sku_cols[i % 2]:
 
                     st.metric(
-                        label=f"{row.sku_number} /n {row.sku}",
+                        label=f"{row.sku_number} | {row.sku}",
                         value=row.count
                     )
                 
-        st.markdown("### 🛵 Units")
+        with overall_tab:
+            render_units_and_pf(df)
 
-        for pc in station_order:
-        
-            station_df = latest[
-                latest["station"] == pc
-            ]
-        
-            with st.expander(
-                f"{pc} ({len(station_df)})",
-                expanded=False
-            ):
-        
-                if station_df.empty:
-                    st.write("No units")
-        
-                else:
-        
-                    badges = []
-        
-                    for _, row in station_df.iterrows():
-        
-                        vin = row["serial_number"]
-        
-                        result = str(
-                            row["results"]
-                        ).upper()
-        
-                        bg = "#00AA00" if result == "PASS" else "#CC0000"
-        
-                        badges.append(
-                            f"""
-                            <span style="
-                                background:{bg};
-                                color:white;
-                                padding:3px 8px;
-                                border-radius:8px;
-                                margin:2px;
-                                display:inline-block;
-                                font-size:12px;
-                                font-weight:bold;
-                            ">
-                                {vin}
-                            </span>
-                            """
-                        )
-        
-                    st.markdown(
-                        "".join(badges),
-                        unsafe_allow_html=True
-                    )
+        with daily_tab:
+            render_units_and_pf(daily_df)
+
+        with weekly_tab:
+            render_units_and_pf(weekly_df)
 
     with right_col:
         
@@ -499,44 +665,6 @@ def render_dashboard(df, title):
             height=280
         )
 
-    # ================= PASS FAIL PER PC =================
-    st.subheader("📊 PASS / FAIL PER STATION")
-
-    pf_station = df.groupby(["station", "results"]).size().unstack(fill_value=0)
-
-    cols = st.columns(len(station_order))
-
-    for i, station in enumerate(station_order):
-        with cols[i]:
-            # Get row safely (even if station has no data)
-            if station in pf_station.index:
-                row = pf_station.loc[station]
-                pass_count = row.get("PASS", 0)
-                fail_count = row.get("FAIL", 0)
-            else:
-                pass_count = 0
-                fail_count = 0
-
-            total = pass_count + fail_count
-            pass_rate = (pass_count / total * 100) if total > 0 else 0
-
-            # Optional color logic
-            if pass_rate >= 95:
-                rate_color = "#00ff00"
-            elif pass_rate >= 85:
-                rate_color = "#ffaa00"
-            else:
-                rate_color = "#ff3333"
-            
-            st.markdown(f"""
-            <div class='card'>
-                <div style='font-size:15px;'>{station}</div>
-                <div style='color:#00ff00;'>PASS: {pass_count}  <span style='color:#ff3333;'>FAIL: {fail_count}</span></div>
-                <div style='margin-top:10px;font-size:16px;'>
-                    PASS RATE: <span style='color:{rate_color};'>{pass_rate:.1f}%</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
 
     # Alerts
     st.subheader("🚨 ALERTS")
