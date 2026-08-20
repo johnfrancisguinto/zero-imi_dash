@@ -278,11 +278,23 @@ def load_sheet(sheet_name):
     if "sku_number" in df.columns:
 
         df["sku_number"] = (
+            df["sku_number"]
+            .replace("", pd.NA)
+            .replace(" ", pd.NA)
+        )
+
+        df["sku_number"] = (
             df.groupby("serial_number")["sku_number"]
             .ffill()
         )
 
     if "bcb_part_number" in df.columns:
+
+        df["bcb_part_number"] = (
+            df["bcb_part_number"]
+            .replace("", pd.NA)
+            .replace(" ", pd.NA)
+        )
 
         df["bcb_part_number"] = (
             df.groupby("serial_number")["bcb_part_number"]
@@ -370,7 +382,17 @@ def render_dashboard(df, title):
         return 0
 
     latest, stalled = process_df(df)
-        
+    st.write(
+    df[
+        [
+            "station",
+            "serial_number",
+            "sku_number",
+            "bcb_part_number"
+        ]
+    ]
+    .head(20)
+    )
     daily_count, weekly_count = get_production_counts(df)
 
     station_order = get_station_order(df)
