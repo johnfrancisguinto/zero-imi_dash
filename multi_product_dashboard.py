@@ -374,7 +374,7 @@ def get_production_counts(df):
 
     return daily_count, weekly_count
 
-def render_dashboard(df, title):
+def render_dashboard(df, title, view="overall"):
     # st.subheader(title)
 
     if df.empty:
@@ -382,17 +382,7 @@ def render_dashboard(df, title):
         return 0
 
     latest, stalled = process_df(df)
-    st.write(
-    df[
-        [
-            "station",
-            "serial_number",
-            "sku_number",
-            "bcb_part_number"
-        ]
-    ]
-    .head(20)
-    )
+
     daily_count, weekly_count = get_production_counts(df)
 
     station_order = get_station_order(df)
@@ -415,16 +405,10 @@ def render_dashboard(df, title):
         df["datetime"].dt.date >= last_sunday
     ].copy()
 
-    daily_tab, weekly_tab, overall_tab = st.tabs([
-        f"📅 Daily Output ({daily_count})",
-        f"📈 Weekly Output ({weekly_count})",
-        f"📊 Overall"
-    ])
-
-
     def render_units_and_pf(view_df):
 
         latest_view, _ = process_df(view_df)
+        
 
         if title == "BIKE Line":
 
@@ -618,14 +602,58 @@ def render_dashboard(df, title):
                     """, unsafe_allow_html=True)
 
         
-    with daily_tab:
-        render_units_and_pf(daily_df)
+    if view == "daily":
 
-    with weekly_tab:
-        render_units_and_pf(weekly_df)
+        view_df = daily_df
 
-    with overall_tab:
-        render_units_and_pf(df)
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📅 DAILY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#00AEEF;'>
+                {daily_count}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    elif view == "weekly":
+
+        view_df = weekly_df
+
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📈 WEEKLY OUTPUT</div>
+            <div style='font-size:26px;font-weight:bold;color:#FF3139;'>
+                {weekly_count}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    else:
+
+        view_df = df
+
+        total_wip = len(latest)
+
+        if title == "BIKE Line":
+
+            total_wip = len(
+                latest[
+                    latest["station"] != "Shipped"
+                ]
+            )
+
+        st.markdown(f"""
+        <div class='card'>
+            <div style='font-size:14px;'>📦 TOTAL WIP</div>
+            <div style='font-size:26px;font-weight:bold;color:#00FF00;'>
+                {total_wip}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.divider()
+
+    render_units_and_pf(view_df)
 
 
     st.markdown("### 🧭 WIP Trace")
@@ -900,14 +928,36 @@ if selected_product == "BIKE Line":
     ship_sheet = SPREADSHEET.worksheet(
         "Shipments"
     )
-    dashboard_tab, pdi_tab, logistics_tab = st.tabs([
-        "📊 Dashboard",
-        "📝 PDI Entry",
-        "🚚 Bike Logistics"
+
+    daily_tab, weekly_tab, overall_tab, pdi_tab, logistics_tab = st.tabs([
+    "📅 Daily",
+    "📈 Weekly",
+    "📊 Overall",
+    "📝 PDI Entry",
+    "🚚 Bike Logistics"
     ])
 
-    with dashboard_tab:
-        render_dashboard(df, selected_product)
+
+    with daily_tab:
+        render_dashboard(
+            df,
+            selected_product,
+            "daily"
+        )
+
+    with weekly_tab:
+        render_dashboard(
+            df,
+            selected_product,
+            "weekly"
+        )
+
+    with overall_tab:
+        render_dashboard(
+            df,
+            selected_product,
+            "overall"
+        )
 
     with pdi_tab:
 
