@@ -267,8 +267,33 @@ def load_sheet(sheet_name):
 
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
     df = df.map(lambda x: str(x).strip())
-    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-    df = df.sort_values("datetime", ascending=False)
+    df["datetime"] = pd.to_datetime(
+        df["datetime"],
+        errors="coerce"
+    )
+
+    # oldest to newest
+    df = df.sort_values("datetime")
+
+    if "sku_number" in df.columns:
+
+        df["sku_number"] = (
+            df.groupby("serial_number")["sku_number"]
+            .ffill()
+        )
+
+    if "bcb_part_number" in df.columns:
+
+        df["bcb_part_number"] = (
+            df.groupby("serial_number")["bcb_part_number"]
+            .ffill()
+        )
+
+    # latest first for dashboard
+    df = df.sort_values(
+        "datetime",
+        ascending=False
+    )
     df["sku"] = df["serial_number"].astype(str).apply(get_part)
 
     return df
@@ -369,18 +394,11 @@ def render_dashboard(df, title):
     ].copy()
 
     daily_tab, weekly_tab, overall_tab = st.tabs([
-        f"📅 Daily {daily_count}",
-        f"📈 Weekly {weekly_count}",
+        f"📅 Daily Output ({daily_count})",
+        f"📈 Weekly Output ({weekly_count})",
         f"📊 Overall"
     ])
 
-
-    # counts_full = {pc: counts.get(pc, 0) for pc in station_order}
-
-    # cols = st.columns(len(station_order))
-    # for i, pc in enumerate(station_order):
-    #     with cols[i]:
-    #         st.metric(pc, counts_full[pc])
 
     def render_units_and_pf(view_df):
 
@@ -414,7 +432,7 @@ def render_dashboard(df, title):
                 .reset_index(name="count")
                 .sort_values("count", ascending=False)
             )
-            
+
             sku_cols = st.columns(2)
 
             for i, row in enumerate(sku_counts.itertuples()):
