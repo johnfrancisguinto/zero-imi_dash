@@ -655,41 +655,6 @@ def render_dashboard(df, title, view="overall"):
 
     render_units_and_pf(view_df)
 
-
-    st.markdown("### 🧭 WIP Trace")
-
-    serial = st.selectbox(
-        "VIN",
-        df["serial_number"].unique()
-    )
-
-    trace = (
-        df[df["serial_number"] == serial]
-        .sort_values("datetime")
-    )
-    
-    def color_result(val):
-        color = "#00ff00" if val=="PASS" else "#ff3333"
-        return f"color:{color}; font-weight:bold"
-    
-    st.dataframe(
-        trace[
-            [
-                "datetime",
-                "station",
-                "serial_number",
-                "results"
-            ]
-        ].style.map(
-            color_result,
-            subset=["results"]
-        ),
-        use_container_width=True,
-        hide_index=True,
-        height=280
-    )
-
-
     # Alerts
     st.subheader("🚨 ALERTS")
 
@@ -1150,6 +1115,60 @@ if selected_product == "BIKE Line":
                 )
                 st.cache_data.clear()
                 st.rerun()
+
+    st.divider()
+
+    st.markdown("### 🧭 WIP Trace")
+
+    serial = st.selectbox(
+        "VIN",
+        sorted(df["serial_number"].dropna().unique()),
+        key="bike_wip_trace"
+    )
+
+    trace = (
+        df[
+            df["serial_number"] == serial
+        ]
+        .sort_values(
+            "datetime",
+            ascending=False
+        )
+    )
+    row_count = len(trace)
+
+    table_height = min(
+        max((row_count + 1) * 35, 100),
+        220
+    )
+    def color_result(val):
+
+        color = (
+            "#00ff00"
+            if str(val).upper() == "PASS"
+            else "#ff3333"
+        )
+
+        return f"color:{color}; font-weight:bold"
+    
+    st.dataframe(
+        trace[
+            [
+                "datetime",
+                "station",
+                "serial_number",
+                "sku_number",
+                "bcb_part_number",
+                "results"
+            ]
+        ].style.map(
+            color_result,
+            subset=["results"]
+        ),
+        use_container_width=True,
+        hide_index=True,
+        height=table_height
+    )
 
 else:
 
