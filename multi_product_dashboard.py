@@ -393,16 +393,28 @@ def render_dashboard(df, title):
             ]
 
             st.subheader("🏷️ SKU on Line")
+            sku_df = latest.copy()
+
+            sku_df["sku_number"] = (
+                sku_df["sku_number"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+            )
+
+            sku_df.loc[
+                sku_df["sku_number"] == "",
+                "sku_number"
+            ] = "UNKNOWN SKU"
+
             sku_counts = (
-                latest[
-                    latest["sku_number"].astype(str).str.strip() != ""
-                ]
+                sku_df
                 .groupby(["sku_number", "sku"])
                 .size()
                 .reset_index(name="count")
                 .sort_values("count", ascending=False)
             )
-
+            
             sku_cols = st.columns(2)
 
             for i, row in enumerate(sku_counts.itertuples()):
