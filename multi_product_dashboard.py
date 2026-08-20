@@ -655,39 +655,39 @@ def render_dashboard(df, title, view="overall"):
 
     render_units_and_pf(view_df)
 
-    # Alerts
-    st.subheader("🚨 ALERTS")
+    # # Alerts
+    # st.subheader("🚨 ALERTS")
 
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown("### Stalled")
-        if stalled.empty:
-            st.success("OK")
-        else:
-            st.dataframe(
-                stalled[
-                    ["serial_number","station","hours"]
-                ],
-                hide_index=True,
-                use_container_width=True,
-                height=200
-            )
+    # with col1:
+    #     st.markdown("### Stalled")
+    #     if stalled.empty:
+    #         st.success("OK")
+    #     else:
+    #         st.dataframe(
+    #             stalled[
+    #                 ["serial_number","station","hours"]
+    #             ],
+    #             hide_index=True,
+    #             use_container_width=True,
+    #             height=200
+    #         )
 
-    with col2:
-        stuck = latest[latest["steps"] <= 1]
-        st.markdown("### No Movement")
-        if stuck.empty:
-            st.success("OK")
-        else:
-            st.dataframe(
-                stuck[
-                    ["serial_number","station","steps"]
-                ],
-                hide_index=True,
-                use_container_width=True,
-                height=200
-            )
+    # with col2:
+    #     stuck = latest[latest["steps"] <= 1]
+    #     st.markdown("### No Movement")
+    #     if stuck.empty:
+    #         st.success("OK")
+    #     else:
+    #         st.dataframe(
+    #             stuck[
+    #                 ["serial_number","station","steps"]
+    #             ],
+    #             hide_index=True,
+    #             use_container_width=True,
+    #             height=200
+    #         )
 
     return len(latest)
 
