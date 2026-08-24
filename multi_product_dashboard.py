@@ -232,6 +232,63 @@ MY_MAP = {
     "V": "27MY"
 }
 
+def get_out_of_process_units(df):
+
+    process_order = {
+        "MBB Config": 1,
+        "PREL": 2,
+        "FQC": 3,
+        "PDI": 4,
+        "Shipped": 5
+    }
+
+    alerts = []
+
+    for vin, group in df.groupby("serial_number"):
+
+        group = group.sort_values("datetime")
+
+        stations = (
+            group["station"]
+            .tolist()
+        )
+
+        max_step_seen = 0
+
+        for station in stations:
+
+            if station not in process_order:
+                continue
+
+            current_step = process_order[station]
+
+            if current_step < max_step_seen:
+
+                alerts.append({
+                    "serial_number": vin,
+                    "station": station,
+                    "issue": (
+                        "Processed after "
+                        "later station"
+                    )
+                })
+
+                break
+
+            max_step_seen = max(
+                max_step_seen,
+                current_step
+            )
+
+    alerts.append({
+    "serial_number": vin,
+    "station": station,
+    "issue": "Processed after later station",
+    "history": " > ".join(stations)
+    })
+
+    return pd.DataFrame(alerts)
+
 def get_sku_name(sku_number):
 
     sku_info = SKU_MASTER.get(
@@ -673,39 +730,6 @@ def render_dashboard(df, title, view="overall"):
 
     render_units_and_pf(view_df)
 
-    # # Alerts
-    # st.subheader("🚨 ALERTS")
-
-    # col1, col2 = st.columns(2)
-
-    # with col1:
-    #     st.markdown("### Stalled")
-    #     if stalled.empty:
-    #         st.success("OK")
-    #     else:
-    #         st.dataframe(
-    #             stalled[
-    #                 ["serial_number","station","hours"]
-    #             ],
-    #             hide_index=True,
-    #             use_container_width=True,
-    #             height=200
-    #         )
-
-    # with col2:
-    #     stuck = latest[latest["steps"] <= 1]
-    #     st.markdown("### No Movement")
-    #     if stuck.empty:
-    #         st.success("OK")
-    #     else:
-    #         st.dataframe(
-    #             stuck[
-    #                 ["serial_number","station","steps"]
-    #             ],
-    #             hide_index=True,
-    #             use_container_width=True,
-    #             height=200
-    #         )
 
     return len(latest)
 
@@ -1241,6 +1265,27 @@ if selected_product == "BIKE Line":
         hide_index=True,
         height=table_height
     )
+
+    st.divider()
+
+    st.subheader("🚨 Out Of Process Units")
+
+    oop_df = get_out_of_process_units(df)
+
+    if oop_df.empty:
+
+        st.success(
+            "No out-of-process units found."
+        )
+
+    else:
+
+        st.dataframe(
+            oop_df,
+            hide_index=True,
+            use_container_width=True,
+            height=250
+        )
 
 else:
 
