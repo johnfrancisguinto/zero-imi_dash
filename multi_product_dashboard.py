@@ -1261,10 +1261,6 @@ if selected_product == "BIKE Line":
 
     if serial is not None:
 
-        st.caption(
-            f"Full VIN: {serial}"
-        )
-
         trace = (
             df[
                 df["serial_number"] == serial
