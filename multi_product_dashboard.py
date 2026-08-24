@@ -25,6 +25,13 @@ st.set_page_config(
     layout="wide"
 )
 
+SKU_MASTER = json.loads(
+    os.getenv(
+        "SKU_MASTER",
+        "{}"
+    )
+)
+
 st.markdown("""
 <style>
 
@@ -225,6 +232,17 @@ MY_MAP = {
     "V": "27MY"
 }
 
+def get_sku_name(sku_number):
+
+    sku_info = SKU_MASTER.get(
+        str(sku_number).strip(),
+        {}
+    )
+
+    return sku_info.get(
+        "name",
+        "UNKNOWN SKU"
+    )
 
 def get_part(vin):
     try:
@@ -644,7 +662,7 @@ def render_dashboard(df, title, view="overall"):
 
         st.markdown(f"""
         <div class='card'>
-            <div style='font-size:14px;'>📦 TOTAL WIP</div>
+            <div style='font-size:14px;'>📦 TOTAL OVERALL</div>
             <div style='font-size:26px;font-weight:bold;color:#00FF00;'>
                 {total_wip}
             </div>
@@ -944,13 +962,39 @@ if selected_product == "BIKE Line":
 
         else:
 
-
             pdi_table = pd.DataFrame({
                 "Select": False,
-                "VIN": available_pdi[
-                    "serial_number"
-                ].tolist()
+
+                "VIN":
+                    available_pdi[
+                        "serial_number"
+                    ].tolist(),
+
+                "SKU Number":
+                    available_pdi[
+                        "sku_number"
+                    ].fillna("").tolist(),
+
+                "BCB PN":
+                    available_pdi[
+                        "bcb_part_number"
+                    ].fillna("").tolist()
             })
+
+            pdi_table["SKU Name"] = (
+                pdi_table["SKU Number"]
+                .apply(get_sku_name)
+            )
+
+            pdi_table = pdi_table[
+                [
+                    "Select",
+                    "SKU Number",
+                    "SKU Name",
+                    "VIN",
+                    "BCB PN"
+                ]
+            ]
 
             edited = st.data_editor(
                 pdi_table,
@@ -1031,10 +1075,37 @@ if selected_product == "BIKE Line":
 
         ship_table = pd.DataFrame({
             "Select": False,
-            "VIN": available_shipment[
-                "serial_number"
-            ].tolist()
+
+            "VIN":
+                available_shipment[
+                    "serial_number"
+                ].tolist(),
+
+            "SKU Number":
+                available_shipment[
+                    "sku_number"
+                ].fillna("").tolist(),
+
+            "BCB PN":
+                available_shipment[
+                    "bcb_part_number"
+                ].fillna("").tolist()
         })
+
+        ship_table["SKU Name"] = (
+            ship_table["SKU Number"]
+            .apply(get_sku_name)
+        )
+
+        ship_table = ship_table[
+            [
+                "Select",
+                "SKU Number",
+                "SKU Name",
+                "VIN",
+                "BCB PN"
+            ]
+        ]
 
         edited = st.data_editor(
             ship_table,
@@ -1159,7 +1230,8 @@ if selected_product == "BIKE Line":
                 "serial_number",
                 "sku_number",
                 "bcb_part_number",
-                "results"
+                "results",
+                "failure_remarks"
             ]
         ].style.map(
             color_result,
