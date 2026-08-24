@@ -1220,80 +1220,97 @@ if selected_product == "BIKE Line":
         )
     }
 
-    search_suffix = st.text_input(
-        "Search VIN (Last 4 Digits)",
-        ""
-    )
-
-    if search_suffix:
-
-        matching_suffixes = [
-            s for s in vin_lookup.keys()
-            if s.startswith(search_suffix)
-        ]
-
-    else:
-
-        matching_suffixes = sorted(
-            vin_lookup.keys()
-        )
-
-    selected_suffix = st.selectbox(
-        "VIN (Last 4 Digits)",
-        matching_suffixes,
+    suffix = st.text_input(
+        "Enter Last 4 VIN Digits",
+        max_chars=4,
         key="bike_wip_trace"
     )
 
-    serial = vin_lookup[selected_suffix]
+    serial = None
 
-    st.caption(
-        f"Full VIN: {serial}"
-    )
+    if suffix:
 
-    trace = (
-        df[
-            df["serial_number"] == serial
-        ]
-        .sort_values(
-            "datetime",
-            ascending=False
+        matches = df[
+            df["serial_number"]
+            .astype(str)
+            .str.endswith(suffix, na=False)
+        ][
+            "serial_number"
+        ].unique()
+
+        if len(matches) == 1:
+
+            serial = matches[0]
+
+            st.success(
+                f"VIN Found: {serial}"
+            )
+
+        elif len(matches) > 1:
+
+            st.warning(
+                f"{len(matches)} VINs match {suffix}. "
+                "Last 4 digits are not unique."
+            )
+
+        else:
+
+            st.error(
+                "No VIN found."
+            )
+
+    if serial is not None:
+
+        st.caption(
+            f"Full VIN: {serial}"
         )
-    )
-    row_count = len(trace)
 
-    table_height = min(
-        max((row_count + 1) * 35, 100),
-        220
-    )
-    def color_result(val):
-
-        color = (
-            "#00ff00"
-            if str(val).upper() == "PASS"
-            else "#ff3333"
-        )
-
-        return f"color:{color}; font-weight:bold"
-    
-    st.dataframe(
-        trace[
-            [
-                "datetime",
-                "station",
-                "serial_number",
-                "sku_number",
-                "bcb_part_number",
-                "results",
-                "failure_remarks"
+        trace = (
+            df[
+                df["serial_number"] == serial
             ]
-        ].style.map(
-            color_result,
-            subset=["results"]
-        ),
-        use_container_width=True,
-        hide_index=True,
-        height=table_height
-    )
+            .sort_values(
+                "datetime",
+                ascending=False
+            )
+        )
+
+        row_count = len(trace)
+
+        table_height = min(
+            max((row_count + 1) * 35, 100),
+            220
+        )
+
+        def color_result(val):
+
+            color = (
+                "#00ff00"
+                if str(val).upper() == "PASS"
+                else "#ff3333"
+            )
+
+            return f"color:{color}; font-weight:bold"
+
+        st.dataframe(
+            trace[
+                [
+                    "datetime",
+                    "station",
+                    "serial_number",
+                    "sku_number",
+                    "bcb_part_number",
+                    "results",
+                    "failure_remarks"
+                ]
+            ].style.map(
+                color_result,
+                subset=["results"]
+            ),
+            use_container_width=True,
+            hide_index=True,
+            height=table_height
+        )
 
     st.divider()
 
