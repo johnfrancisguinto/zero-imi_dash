@@ -237,9 +237,7 @@ def get_out_of_process_units(df):
     process_order = {
         "MBB Config": 1,
         "PREL": 2,
-        "FQC": 3,
-        "PDI": 4,
-        "Shipped": 5
+        "FQC": 3
     }
 
     alerts = []
@@ -248,44 +246,42 @@ def get_out_of_process_units(df):
 
         group = group.sort_values("datetime")
 
-        stations = (
-            group["station"]
-            .tolist()
-        )
+        stations = [
+            s for s in group["station"]
+            if s in process_order
+        ]
 
-        max_step_seen = 0
+        for i in range(1, len(stations)):
 
-        for station in stations:
+            previous_step = process_order[
+                stations[i - 1]
+            ]
 
-            if station not in process_order:
-                continue
+            current_step = process_order[
+                stations[i]
+            ]
 
-            current_step = process_order[station]
-
-            if current_step < max_step_seen:
+            # backwards movement
+            if current_step < previous_step:
 
                 alerts.append({
                     "serial_number": vin,
-                    "station": station,
-                    "issue": (
-                        "Processed after "
-                        "later station"
-                    )
+                    "issue": "Moved backwards",
+                    "history": " → ".join(stations)
                 })
 
                 break
 
-            max_step_seen = max(
-                max_step_seen,
-                current_step
-            )
+            # skipped station
+            if current_step - previous_step > 1:
 
-    alerts.append({
-    "serial_number": vin,
-    "station": station,
-    "issue": "Processed after later station",
-    "history": " > ".join(stations)
-    })
+                alerts.append({
+                    "serial_number": vin,
+                    "issue": "Skipped station",
+                    "history": " → ".join(stations)
+                })
+
+                break
 
     return pd.DataFrame(alerts)
 
@@ -1215,10 +1211,43 @@ if selected_product == "BIKE Line":
 
     st.markdown("### 🧭 WIP Trace")
 
-    serial = st.selectbox(
-        "VIN",
-        sorted(df["serial_number"].dropna().unique()),
+    vin_lookup = {
+        str(vin)[-4:]: str(vin)
+        for vin in sorted(
+            df["serial_number"]
+            .dropna()
+            .unique()
+        )
+    }
+
+    search_suffix = st.text_input(
+        "Search VIN (Last 4 Digits)",
+        ""
+    )
+
+    if search_suffix:
+
+        matching_suffixes = [
+            s for s in vin_lookup.keys()
+            if s.startswith(search_suffix)
+        ]
+
+    else:
+
+        matching_suffixes = sorted(
+            vin_lookup.keys()
+        )
+
+    selected_suffix = st.selectbox(
+        "VIN (Last 4 Digits)",
+        matching_suffixes,
         key="bike_wip_trace"
+    )
+
+    serial = vin_lookup[selected_suffix]
+
+    st.caption(
+        f"Full VIN: {serial}"
     )
 
     trace = (
