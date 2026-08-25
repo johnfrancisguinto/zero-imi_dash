@@ -1314,6 +1314,8 @@ if selected_product == "BIKE Line":
 
     oop_df = get_out_of_process_units(df)
 
+    oop_df["Resolve"] = False
+
     resolved_sheet = SPREADSHEET.worksheet(
         "Resolved_Alerts"
     )
@@ -1353,44 +1355,67 @@ if selected_product == "BIKE Line":
 
     else:
 
-        for _, row in oop_df.iterrows():
+        edited_oop = st.data_editor(
+            oop_df[
+                [
+                    "Resolve",
+                    "serial_number",
+                    "issue",
+                    "history"
+                ]
+            ],
+            hide_index=True,
+            use_container_width=True,
+            disabled=[
+                "serial_number",
+                "issue",
+                "history"
+            ]
+        )
 
-            vin = row["serial_number"]
-            issue = row["issue"]
-
-            col1, col2, col3 = st.columns(
-                [3, 4, 3]
+        remarks = st.text_area(
+            "Resolution Remarks",
+            placeholder=(
+                "Enter reason for resolving "
+                "the alert..."
             )
+        )
 
-            with col1:
-                st.write(vin)
+        selected_rows = edited_oop[
+            edited_oop["Resolve"]
+        ]
 
-            with col2:
-                st.write(issue)
+        if st.button(
+            f"✅ Resolve Selected ({len(selected_rows)})"
+        ):
 
-            with col3:
+            if selected_rows.empty:
 
-                remarks = st.text_input(
-                    "Remarks",
-                    key=f"remark_{vin}_{issue}"
+                st.warning(
+                    "Select at least one unit."
                 )
 
-                if st.button(
-                    "✅ Resolve",
-                    key=f"resolve_{vin}_{issue}"
-                ):
+            else:
+
+                now = datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+
+                for _, row in selected_rows.iterrows():
 
                     resolved_sheet.append_row([
-                        datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        ),
-                        vin,
-                        issue,
+                        now,
+                        row["serial_number"],
+                        row["issue"],
                         remarks
                     ])
 
-                    st.cache_data.clear()
-                    st.rerun()
+                st.success(
+                    f"{len(selected_rows)} alert(s) resolved."
+                )
+
+                st.cache_data.clear()
+                st.rerun()
 
     if resolved_records:
 
