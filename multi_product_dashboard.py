@@ -1314,6 +1314,37 @@ if selected_product == "BIKE Line":
 
     oop_df = get_out_of_process_units(df)
 
+    resolved_sheet = SPREADSHEET.worksheet(
+        "Resolved_Alerts"
+    )
+
+    resolved_records = (
+        resolved_sheet.get_all_records()
+    )
+
+    if resolved_records:
+
+        resolved_df = pd.DataFrame(
+            resolved_records
+        )
+
+        resolved_keys = set(
+            zip(
+                resolved_df["serial_number"],
+                resolved_df["issue"]
+            )
+        )
+
+        oop_df = oop_df[
+            ~oop_df.apply(
+                lambda r: (
+                    r["serial_number"],
+                    r["issue"]
+                ) in resolved_keys,
+                axis=1
+            )
+        ]
+
     if oop_df.empty:
 
         st.success(
@@ -1322,11 +1353,56 @@ if selected_product == "BIKE Line":
 
     else:
 
+        for _, row in oop_df.iterrows():
+
+            vin = row["serial_number"]
+            issue = row["issue"]
+
+            col1, col2, col3 = st.columns(
+                [3, 4, 3]
+            )
+
+            with col1:
+                st.write(vin)
+
+            with col2:
+                st.write(issue)
+
+            with col3:
+
+                remarks = st.text_input(
+                    "Remarks",
+                    key=f"remark_{vin}_{issue}"
+                )
+
+                if st.button(
+                    "✅ Resolve",
+                    key=f"resolve_{vin}_{issue}"
+                ):
+
+                    resolved_sheet.append_row([
+                        datetime.now().strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                        vin,
+                        issue,
+                        remarks
+                    ])
+
+                    st.cache_data.clear()
+                    st.rerun()
+
+    if resolved_records:
+
+        st.subheader(
+            "✅ Resolved Out Of Process Units"
+        )
+
         st.dataframe(
-            oop_df,
+            resolved_df,
             hide_index=True,
             use_container_width=True,
-            height=250
+            height=200
         )
 
 else:
