@@ -237,7 +237,8 @@ def get_out_of_process_units(df):
     process_order = {
         "MBB Config": 1,
         "PREL": 2,
-        "FQC": 3
+        "FQC": 3,
+        "PDI": 4
     }
 
     alerts = []
