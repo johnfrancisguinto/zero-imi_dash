@@ -486,27 +486,36 @@ def render_dashboard(df, title, view="overall"):
         .dt.strftime("%B %Y")
     )
 
+    current_year = datetime.now().year
+
+    pdi_df_year = pdi_df[
+        pdi_df["datetime"].dt.year == current_year
+    ].copy()
+
     monthly_pdi = (
-    pdi_df
-    .groupby(
-        pdi_df["datetime"].dt.to_period("M")
-    )
-    .size()
-    .reset_index(name="count")
+        pdi_df_year
+        .groupby(
+            pdi_df_year["datetime"].dt.month
+        )
+        .size()
+        .reset_index(name="count")
     )
 
-    monthly_pdi["month_date"] = (
-        monthly_pdi["datetime"]
-        .dt.to_timestamp()
-    )
+    monthly_pdi.columns = [
+        "month_num",
+        "count"
+    ]
 
     monthly_pdi["month"] = (
-        monthly_pdi["month_date"]
-        .dt.strftime("%B %Y")
+        pd.to_datetime(
+            monthly_pdi["month_num"],
+            format="%m"
+        )
+        .dt.strftime("%B")
     )
 
     monthly_pdi = monthly_pdi.sort_values(
-        "month_date"
+        "month_num"
     )
 
     def render_units_and_pf(view_df):
@@ -755,15 +764,19 @@ def render_dashboard(df, title, view="overall"):
         </div>
         """, unsafe_allow_html=True)
 
-        st.subheader("📊 Monthly PDI Output")
+        st.subheader(f"📊 Monthly PDI Output ({current_year})")
 
         bars = alt.Chart(monthly_pdi).mark_bar(
-            color="#00AEEF"
+            color="#00AEEF",
+            size=50
         ).encode(
             x=alt.X(
                 "month:N",
                 sort=monthly_pdi["month"].tolist(),
-                title=None
+                title=None,
+                axis=alt.Axis(
+                    labelAngle=0
+                )
             ),
             y=alt.Y(
                 "count:Q",
@@ -778,7 +791,7 @@ def render_dashboard(df, title, view="overall"):
         text = alt.Chart(monthly_pdi).mark_text(
             dy=-10,
             color="white",
-            fontSize=14,
+            fontSize=16,
             fontWeight="bold"
         ).encode(
             x=alt.X(
