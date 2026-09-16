@@ -477,6 +477,23 @@ def render_dashboard(df, title, view="overall"):
         df["datetime"].dt.date >= last_sunday
     ].copy()
 
+    pdi_df = df[
+        df["station"] == "PDI"
+    ].copy()
+
+    pdi_df["month"] = (
+        pdi_df["datetime"]
+        .dt.strftime("%Y-%m")
+    )
+
+    monthly_pdi = (
+        pdi_df
+        .groupby("month")
+        .size()
+        .reset_index(name="count")
+        .sort_values("month")
+    )
+
     def render_units_and_pf(view_df):
 
         latest_view, _ = process_df(view_df)
@@ -722,6 +739,18 @@ def render_dashboard(df, title, view="overall"):
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+        st.subheader("📊 Monthly PDI Output")
+
+        if not monthly_pdi.empty:
+
+            chart_df = monthly_pdi.set_index(
+                "month"
+            )
+
+            st.bar_chart(
+                chart_df["count"]
+            )
 
     st.divider()
 
@@ -1420,16 +1449,42 @@ if selected_product == "BIKE Line":
 
     if resolved_records:
 
-        st.subheader(
-            "✅ Resolved Out Of Process Units"
+        resolved_df = pd.DataFrame(
+            resolved_records
         )
 
-        st.dataframe(
-            resolved_df,
-            hide_index=True,
-            use_container_width=True,
-            height=200
+        resolved_df["timestamp"] = pd.to_datetime(
+            resolved_df["timestamp"],
+            errors="coerce"
         )
+
+        today = datetime.now().date()
+
+        days_since_sunday = (
+            datetime.now().weekday() + 1
+        ) % 7
+
+        last_sunday = (
+            today -
+            pd.Timedelta(days=days_since_sunday)
+        )
+
+        resolved_df = resolved_df[
+            resolved_df["timestamp"].dt.date >= last_sunday
+        ]
+
+        if not resolved_df.empty:
+
+            st.subheader(
+                "✅ Resolved Units"
+            )
+
+            st.dataframe(
+                resolved_df,
+                hide_index=True,
+                use_container_width=True,
+                height=200
+            )
 
 else:
 
