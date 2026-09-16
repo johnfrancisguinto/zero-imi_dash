@@ -4,7 +4,7 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
-
+import altair as alt
 import os
 import json
 
@@ -483,7 +483,7 @@ def render_dashboard(df, title, view="overall"):
 
     pdi_df["month"] = (
         pdi_df["datetime"]
-        .dt.strftime("%Y-%m")
+        .dt.strftime("%B %Y")
     )
 
     monthly_pdi = (
@@ -742,15 +742,36 @@ def render_dashboard(df, title, view="overall"):
 
         st.subheader("📊 Monthly PDI Output")
 
-        if not monthly_pdi.empty:
+        chart = alt.Chart(monthly_pdi).mark_bar(
+            color="#00AEEF"
+        ).encode(
+            x=alt.X(
+                "month:N",
+                sort=None,
+                title=None
+            ),
+            y=alt.Y(
+                "count:Q",
+                title="Units"
+            ),
+            tooltip=[
+                "month",
+                "count"
+            ]
+        ).properties(
+            height=300
+        )
 
-            chart_df = monthly_pdi.set_index(
-                "month"
-            )
+        chart = chart.configure_view(
+            strokeWidth=0
+        ).configure(
+            background="transparent"
+        )
 
-            st.bar_chart(
-                chart_df["count"]
-            )
+        st.altair_chart(
+            chart,
+            use_container_width=True
+        )
 
     st.divider()
 
