@@ -754,6 +754,60 @@ def render_dashboard(df, title, view="overall"):
                     latest["station"] != "Shipped"
                 ]
             )
+            
+            st.subheader(f"📊 Monthly PDI Output ({current_year})")
+
+            bars = alt.Chart(monthly_pdi).mark_bar(
+                color="#00AEEF",
+                size=50
+            ).encode(
+                x=alt.X(
+                    "month:N",
+                    sort=monthly_pdi["month"].tolist(),
+                    title=None,
+                    axis=alt.Axis(
+                        labelAngle=0
+                    )
+                ),
+                y=alt.Y(
+                    "count:Q",
+                    title="Units"
+                ),
+                tooltip=[
+                    "month",
+                    "count"
+                ]
+            )
+
+            text = alt.Chart(monthly_pdi).mark_text(
+                dy=-10,
+                color="white",
+                fontSize=16,
+                fontWeight="bold"
+            ).encode(
+                x=alt.X(
+                    "month:N",
+                    sort=monthly_pdi["month"].tolist()
+                ),
+                y="count:Q",
+                text="count:Q"
+            )
+
+            chart = (
+                bars + text
+            ).properties(
+                height=300
+            ).configure_view(
+                strokeWidth=0
+            ).configure(
+                background="transparent"
+            )
+
+            st.altair_chart(
+                chart,
+                use_container_width=True
+            )
+
 
         st.markdown(f"""
         <div class='card'>
@@ -763,59 +817,6 @@ def render_dashboard(df, title, view="overall"):
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-        st.subheader(f"📊 Monthly PDI Output ({current_year})")
-
-        bars = alt.Chart(monthly_pdi).mark_bar(
-            color="#00AEEF",
-            size=50
-        ).encode(
-            x=alt.X(
-                "month:N",
-                sort=monthly_pdi["month"].tolist(),
-                title=None,
-                axis=alt.Axis(
-                    labelAngle=0
-                )
-            ),
-            y=alt.Y(
-                "count:Q",
-                title="Units"
-            ),
-            tooltip=[
-                "month",
-                "count"
-            ]
-        )
-
-        text = alt.Chart(monthly_pdi).mark_text(
-            dy=-10,
-            color="white",
-            fontSize=16,
-            fontWeight="bold"
-        ).encode(
-            x=alt.X(
-                "month:N",
-                sort=monthly_pdi["month"].tolist()
-            ),
-            y="count:Q",
-            text="count:Q"
-        )
-
-        chart = (
-            bars + text
-        ).properties(
-            height=300
-        ).configure_view(
-            strokeWidth=0
-        ).configure(
-            background="transparent"
-        )
-
-        st.altair_chart(
-            chart,
-            use_container_width=True
-        )
 
     st.divider()
 
