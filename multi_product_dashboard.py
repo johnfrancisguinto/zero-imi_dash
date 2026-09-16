@@ -487,11 +487,26 @@ def render_dashboard(df, title, view="overall"):
     )
 
     monthly_pdi = (
-        pdi_df
-        .groupby("month")
-        .size()
-        .reset_index(name="count")
-        .sort_values("month")
+    pdi_df
+    .groupby(
+        pdi_df["datetime"].dt.to_period("M")
+    )
+    .size()
+    .reset_index(name="count")
+    )
+
+    monthly_pdi["month_date"] = (
+        monthly_pdi["datetime"]
+        .dt.to_timestamp()
+    )
+
+    monthly_pdi["month"] = (
+        monthly_pdi["month_date"]
+        .dt.strftime("%B %Y")
+    )
+
+    monthly_pdi = monthly_pdi.sort_values(
+        "month_date"
     )
 
     def render_units_and_pf(view_df):
@@ -742,12 +757,12 @@ def render_dashboard(df, title, view="overall"):
 
         st.subheader("📊 Monthly PDI Output")
 
-        chart = alt.Chart(monthly_pdi).mark_bar(
+        bars = alt.Chart(monthly_pdi).mark_bar(
             color="#00AEEF"
         ).encode(
             x=alt.X(
                 "month:N",
-                sort=None,
+                sort=monthly_pdi["month"].tolist(),
                 title=None
             ),
             y=alt.Y(
@@ -758,11 +773,27 @@ def render_dashboard(df, title, view="overall"):
                 "month",
                 "count"
             ]
-        ).properties(
-            height=300
         )
 
-        chart = chart.configure_view(
+        text = alt.Chart(monthly_pdi).mark_text(
+            dy=-10,
+            color="white",
+            fontSize=14,
+            fontWeight="bold"
+        ).encode(
+            x=alt.X(
+                "month:N",
+                sort=monthly_pdi["month"].tolist()
+            ),
+            y="count:Q",
+            text="count:Q"
+        )
+
+        chart = (
+            bars + text
+        ).properties(
+            height=300
+        ).configure_view(
             strokeWidth=0
         ).configure(
             background="transparent"
